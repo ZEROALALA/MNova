@@ -1,0 +1,67 @@
+{
+  "name": "mnova",
+  "productName": "MNova Game Station",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "author": "M. Amin Alobidan",
+  "description": "PS5-inspired Game Station Dashboard",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron . --dev\"",
+    "electron:build": "vite build && electron-builder",
+    "electron:start": "electron ."
+  },
+  "build": {
+    "appId": "com.mnova.gamestation",
+    "productName": "MNova",
+    "directories": {
+      "output": "../MNova-Release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "server/**/*",
+      "!server/node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@tailwindcss/vite": "^4.3.2",
+    "discord-rpc": "^4.0.1",
+    "idb-keyval": "^6.2.6",
+    "lucide-react": "^1.22.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "systeminformation": "^5.31.11",
+    "usb": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "autoprefixer": "^10.5.2",
+    "concurrently": "^10.0.3",
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "oxlint": "^1.71.0",
+    "postcss": "^8.5.16",
+    "prettier": "^3.9.4",
+    "tailwindcss": "^4.3.2",
+    "vite": "^8.1.1",
+    "wait-on": "^9.0.10"
+  }
+}

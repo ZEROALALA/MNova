@@ -1,0 +1,90 @@
+[
+  {
+    "id": "steam_1091500",
+    "title": "Cyberpunk 2077",
+    "developer": "CD PROJEKT RED",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "1091500",
+    "isSteam": true
+  },
+  {
+    "id": "steam_1245620",
+    "title": "Elden Ring",
+    "developer": "FromSoftware Inc.",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "1245620",
+    "isSteam": true
+  },
+  {
+    "id": "steam_367520",
+    "title": "Hollow Knight",
+    "developer": "Team Cherry",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/367520/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/367520/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "367520",
+    "isSteam": true
+  },
+  {
+    "id": "steam_976730",
+    "title": "Hades",
+    "developer": "Supergiant Games",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/976730/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/976730/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "976730",
+    "isSteam": true
+  },
+  {
+    "id": "steam_814380",
+    "title": "Sekiro: Shadows Die Twice",
+    "developer": "FromSoftware Inc.",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/814380/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/814380/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "814380",
+    "isSteam": true
+  },
+  {
+    "id": "steam_1174180",
+    "title": "Red Dead Redemption 2",
+    "developer": "Rockstar Games",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "1174180",
+    "isSteam": true
+  },
+  {
+    "id": "steam_271590",
+    "title": "Grand Theft Auto V",
+    "developer": "Rockstar Games",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "271590",
+    "isSteam": true
+  },
+  {
+    "id": "steam_570",
+    "title": "Dota 2",
+    "developer": "Valve",
+    "backgroundUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/570/library_hero.jpg",
+    "coverUrl": "https://cdn.cloudflare.steamstatic.com/steam/apps/570/library_600x900.jpg",
+    "logoUrl": "",
+    "videoUrl": "",
+    "steamId": "570",
+    "isSteam": true
+  }
+]
