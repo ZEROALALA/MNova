@@ -4,6 +4,7 @@ import VideoPlayerOverlay from '../components/VideoPlayerOverlay';
 import { api } from '../services/api';
 import useParallax from '../hooks/useParallax';
 import useAutoTrailer from '../hooks/useAutoTrailer';
+import Particles from '../components/Particles';
 
 const XboxLayout = forwardRef(({
   games,
@@ -144,16 +145,33 @@ const XboxLayout = forwardRef(({
     <div className="absolute inset-0 z-0 bg-ps-dark">
       {/* Clear Background Image just like PS5 */}
       {!isSpecialCard && (
-        <div 
-          className="absolute bg-cover bg-center transition-opacity duration-700"
-          style={{ 
-            top: '-30px', left: '-30px', right: '-30px', bottom: '-30px',
-            transform: `translate(${parallax.x * -1}px, ${parallax.y * -1}px)`,
-            backgroundImage: `url(${selectedGame?.backgroundUrl || selectedGame?.coverUrl})`,
-            opacity: isVideoPlaying && !isWokenUp ? 0 : (imageLoaded ? 1 : 0)
-          }}
-        />
+        <>
+          {/* Ambient Heavy Blur Layer */}
+          <div 
+            className="absolute bg-cover bg-center transition-opacity duration-1000 blur-3xl opacity-50 scale-110"
+            style={{ 
+              top: '-50px', left: '-50px', right: '-50px', bottom: '-50px',
+              backgroundImage: `url(${selectedGame?.backgroundUrl || selectedGame?.coverUrl})`,
+              opacity: isVideoPlaying && !isWokenUp ? 0 : (imageLoaded ? 0.6 : 0)
+            }}
+          />
+          {/* Main Background Image */}
+          <div 
+            className="absolute bg-cover bg-center transition-opacity duration-700"
+            style={{ 
+              top: '-30px', left: '-30px', right: '-30px', bottom: '-30px',
+              transform: `translate(${parallax.x * -1}px, ${parallax.y * -1}px)`,
+              backgroundImage: `url(${selectedGame?.backgroundUrl || selectedGame?.coverUrl})`,
+              opacity: isVideoPlaying && !isWokenUp ? 0 : (imageLoaded ? 1 : 0)
+            }}
+          />
+        </>
       )}
+
+      {/* Global Particles for immersion */}
+      <div className={`transition-opacity duration-1000 ${uiOpacityClass}`}>
+        <Particles count={45} />
+      </div>
       
       {/* Video Player overlay */}
       {!isSpecialCard && (selectedGame?.videoUrls?.length > 0 || selectedGame?.videoUrl) && (
@@ -210,8 +228,8 @@ const XboxLayout = forwardRef(({
                     setFocusedRegion('CAROUSEL');
                   }
                 }}
-                className={`relative aspect-[3/4] rounded-lg overflow-hidden transition-all duration-200 cursor-pointer shadow-md
-                  ${isSelected ? 'ring-[4px] ring-[#107C10] z-10 shadow-2xl shadow-[#107C10]/40' : 'hover:ring-2 hover:ring-white/40 z-0'}
+                className={`relative aspect-[3/4] rounded-lg overflow-hidden transition-all duration-300 cursor-pointer shadow-md group
+                  ${isSelected ? 'ring-[4px] ring-[#107C10] z-10 shadow-[0_0_30px_rgba(16,124,16,0.6)] scale-105 transform translate-y-[-5px]' : 'hover:ring-2 hover:ring-white/60 hover:scale-105 hover:shadow-xl hover:-translate-y-1 z-0'}
                   ${isSpecial ? 'bg-white/5 border border-white/10 backdrop-blur-md' : 'bg-[#1e1e1e]'}
                 `}
               >
@@ -220,11 +238,11 @@ const XboxLayout = forwardRef(({
                     <img 
                       src={game.coverUrl} 
                       alt={game.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     {/* Dark gradient at the bottom for the title */}
-                    <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-end p-3">
-                      <p className="text-white font-bold truncate drop-shadow-md text-sm">{game.title}</p>
+                    <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex items-end p-3 transition-opacity duration-300">
+                      <p className="text-white font-bold truncate drop-shadow-lg text-sm">{game.title}</p>
                     </div>
                   </>
                 ) : (

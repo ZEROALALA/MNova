@@ -7,9 +7,8 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 
 export default function NexusAI({ games, onLaunchGame, onTabChange }) {
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [interimTranscript, setInterimTranscript] = useState('');
-  const [recognition, setRecognition] = useState(null);
   
   // Settings UI
   const [showSettings, setShowSettings] = useState(false);
@@ -17,81 +16,20 @@ export default function NexusAI({ games, onLaunchGame, onTabChange }) {
   const [lang, setLang] = useState(localStorage.getItem('nexus_lang') || 'ar-SA');
   const [voiceType, setVoiceType] = useState(localStorage.getItem('nexus_voice') || 'mnova');
   
-  const manualStopRef = useRef(false);
-  const silenceTimerRef = useRef(null);
   const latestStateRef = useRef({ lang, voiceType, games, apiKey });
+  const mediaRecorderRef = useRef(null);
+  const audioRef = useRef(null);
   
+  useEffect(() => {
+    audioRef.current = new Audio();
+  }, []);
+
   useEffect(() => {
     latestStateRef.current = { lang, voiceType, games, apiKey };
   }, [lang, voiceType, games, apiKey]);
   
   // Audio Speech
   const synth = window.speechSynthesis;
-
-  useEffect(() => {
-    if (!SpeechRecognition) {
-      console.warn('Speech Recognition not supported in this browser.');
-      return;
-    }
-    const rec = new SpeechRecognition();
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.lang = lang;
-
-    rec.onstart = () => {
-      const currentLang = latestStateRef.current.lang;
-      setIsListening(true);
-      setTranscript(currentLang === 'ar-SA' ? 'أستمع...' : 'Listening...');
-      setInterimTranscript('');
-      manualStopRef.current = false;
-    };
-    
-    rec.onresult = (event) => {
-      let final = '';
-      let interim = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcriptSegment = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          final += transcriptSegment;
-        } else {
-          interim += transcriptSegment;
-        }
-      }
-
-      setInterimTranscript(interim);
-      
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-      
-      if (final) {
-        setInterimTranscript('');
-        processCommand(final.trim());
-      } else if (interim.trim().length > 0) {
-        // Force finalization if user stops talking for 2.5 seconds
-        silenceTimerRef.current = setTimeout(() => {
-          manualStopRef.current = true;
-          rec.stop();
-          setInterimTranscript('');
-          processCommand(interim.trim());
-          setTimeout(() => {
-            manualStopRef.current = false;
-            try { rec.start(); } catch(e){}
-          }, 1000);
-        }, 2500);
-      }
-    };
-
-    rec.onend = () => {
-      if (!synth.speaking) {
-        setIsListening(false);
-        setTimeout(() => {
-          setTranscript('');
-        }, 8000);
-      }
-    };
-
-    setRecognition(rec);
-  }, [lang]); // Recreate recognition when language changes
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -101,64 +39,91 @@ export default function NexusAI({ games, onLaunchGame, onTabChange }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [recognition, isListening]);
+  }, [isListening]);
 
-  const toggleListening = () => {
-    if (!recognition) return;
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-    if (isListening) {
-      manualStopRef.current = true;
-      recognition.stop();
-      if (synth.speaking) synth.cancel();
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const audioChunks = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = async () => {
+          const base64Audio = reader.result.split(',')[1];
+          await sendAudioToGemini(base64Audio);
+        };
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsListening(true);
+      
+      let promptTxt = latestStateRef.current.lang === 'ar-SA' ? 'أستمع... (اضغط المايكروفون مرة أخرى للإرسال)' : 'Listening... (Click mic again to send)';
+      setTranscript(promptTxt);
+    } catch (e) {
+      setTranscript(`Mic Error: ${e.message}. هل سمحت باستخدام المايكروفون؟`);
+      setTimeout(() => setTranscript(''), 5000);
+    }
+  };
+
+  const toggleListening = async () => {
+    if (isListening && mediaRecorderRef.current) {
+      // Stop recording and send
+      mediaRecorderRef.current.stop();
       setIsListening(false);
+      setTranscript(latestStateRef.current.lang === 'ar-SA' ? 'جاري التفكير...' : 'Thinking...');
     } else {
       const currentLang = latestStateRef.current.lang;
       const currentVoice = latestStateRef.current.voiceType;
       
-      manualStopRef.current = false;
-      setIsListening(true);
-      
+      if (!latestStateRef.current.apiKey) {
+        setTranscript(currentLang === 'ar-SA' ? 'الرجاء إدخال مفتاح Gemini في الإعدادات أولاً!' : 'Please add Gemini API key in settings first!');
+        setTimeout(() => setTranscript(''), 4000);
+        return;
+      }
+
       let greeting = '';
       if (currentLang === 'ar-SA') {
         greeting = currentVoice === 'mariam' ? 'السلام عليكم، أنا مريم.' : 'السلام عليكم، أنا ماي نوفا.';
       } else {
         greeting = currentVoice === 'mariam' ? 'Hello, I am Mariam.' : 'Hello, I am MNova.';
       }
-      
-      setTranscript(greeting);
-      
-      if (synth) {
-        synth.cancel();
-        const utterance = new SpeechSynthesisUtterance(greeting);
-        utterance.lang = currentLang;
-        
-        const voices = synth.getVoices();
-        const availableVoices = voices.filter(v => v.lang.includes(currentLang.split('-')[0]));
-        
-        if (currentVoice === 'mariam') {
-          const female = availableVoices.find(v => v.name.toLowerCase().includes('hoda') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira'));
-          if (female) utterance.voice = female;
-          utterance.pitch = 1.3;
-        } else {
-          const male = availableVoices.find(v => v.name.toLowerCase().includes('naayf') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david'));
-          if (male) utterance.voice = male;
-          utterance.pitch = 0.8;
+
+      const cloudTTS = (text, onEnd) => {
+        const tl = currentLang.startsWith('ar') ? 'ar' : (currentVoice === 'mariam' ? 'en-US' : 'en-GB');
+        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${encodeURIComponent(text)}`;
+        if (audioRef.current) {
+          let ended = false;
+          const finish = () => {
+            if (ended) return;
+            ended = true;
+            onEnd();
+          };
+          audioRef.current.src = url;
+          audioRef.current.onplay = () => { setTranscript(text); setIsSpeaking(true); };
+          audioRef.current.onended = () => { setIsSpeaking(false); finish(); };
+          audioRef.current.onerror = () => {
+            setIsSpeaking(false);
+            setTranscript(text);
+            setTimeout(finish, 1500);
+          };
+          audioRef.current.play().catch((e) => {
+            console.error("Audio Play Error:", e);
+            setTranscript(text);
+            setTimeout(finish, 1500);
+          });
         }
-        
-        utterance.rate = 1.05;
-        
-        utterance.onend = () => {
-          if (!manualStopRef.current) {
-            setTranscript(currentLang === 'ar-SA' ? 'أستمع...' : 'Listening...');
-            try { recognition.start(); } catch(e) {}
-          }
-        };
-        
-        synth.speak(utterance);
-      } else {
-        setTranscript(currentLang === 'ar-SA' ? 'أستمع...' : 'Listening...');
-        try { recognition.start(); } catch(e) {}
-      }
+      };
+
+      cloudTTS(greeting, startRecording);
     }
   };
 
@@ -167,99 +132,91 @@ export default function NexusAI({ games, onLaunchGame, onTabChange }) {
     localStorage.setItem('nexus_lang', lang);
     localStorage.setItem('nexus_voice', voiceType);
     setShowSettings(false);
-    
-    if (isListening && recognition) {
-      manualStopRef.current = true;
-      recognition.stop();
-      setTimeout(() => {
-        manualStopRef.current = false;
-        recognition.start();
-      }, 500);
-    }
   };
 
   const speakResponse = (text) => {
     const st = latestStateRef.current;
     setTranscript(st.lang === 'ar-SA' ? `نيكسوس: ${text}` : `Nexus: ${text}`);
-    if (synth) {
-      synth.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = st.lang;
-      
-      const voices = synth.getVoices();
-      const availableVoices = voices.filter(v => v.lang.includes(st.lang.split('-')[0]));
-      
-      if (st.voiceType === 'mariam') {
-        const female = availableVoices.find(v => v.name.toLowerCase().includes('hoda') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira'));
-        if (female) utterance.voice = female;
-        utterance.pitch = 1.3;
-      } else {
-        const male = availableVoices.find(v => v.name.toLowerCase().includes('naayf') || v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('david'));
-        if (male) utterance.voice = male;
-        utterance.pitch = 0.8;
-      }
-      
-      utterance.rate = 1.05;
-      
-      utterance.onend = () => {
-        setIsListening(false);
-        manualStopRef.current = true;
+    
+    const onEnd = () => {
+      setIsListening(false);
+      manualStopRef.current = true;
+    };
+
+    // Force Cloud TTS
+    const tl = st.lang.startsWith('ar') ? 'ar' : (st.voiceType === 'mariam' ? 'en-US' : 'en-GB');
+    const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=${tl}&q=${encodeURIComponent(text)}`;
+    if (audioRef.current) {
+      let ended = false;
+      const finish = () => {
+        if (ended) return;
+        ended = true;
+        onEnd();
       };
-      
-      synth.speak(utterance);
+      audioRef.current.src = url;
+      audioRef.current.onplay = () => setIsSpeaking(true);
+      audioRef.current.onended = () => { setIsSpeaking(false); finish(); };
+      audioRef.current.onerror = () => { setIsSpeaking(false); finish(); };
+      audioRef.current.play().catch((e) => { setIsSpeaking(false); finish(); });
     }
   };
 
-  const processCommand = async (command) => {
+  const sendAudioToGemini = async (base64Audio) => {
     const st = latestStateRef.current;
-    const lowerCmd = command.toLowerCase();
-    
-    // Check local commands first
-    const isPlay = lowerCmd.includes('play') || lowerCmd.includes('launch') || lowerCmd.includes('start') || lowerCmd.includes('تشغيل') || lowerCmd.includes('العب') || lowerCmd.includes('شغل');
-    if (isPlay) {
-      const game = st.games.find(g => lowerCmd.includes(g.title.toLowerCase()));
-      if (game) {
-        speakResponse(st.lang === 'ar-SA' ? `جاري تشغيل ${game.title}، استمتع!` : `Launching ${game.title}, have fun!`);
-        setTimeout(() => onLaunchGame(game), 2000);
-        return;
-      }
-    } else if (lowerCmd.includes('news') || lowerCmd.includes('أخبار') || lowerCmd.includes('اخبار')) {
-      onTabChange('news');
-      speakResponse(st.lang === 'ar-SA' ? 'أفتح قسم الأخبار.' : 'Opening gaming news.');
-      return;
-    } else if (lowerCmd.includes('gallery') || lowerCmd.includes('screenshots') || lowerCmd.includes('صور') || lowerCmd.includes('لقطات')) {
-      onTabChange('screenshots');
-      speakResponse(st.lang === 'ar-SA' ? 'أعرض لقطات الشاشة.' : 'Here are your screenshots.');
-      return;
-    } else if (lowerCmd.includes('games') || lowerCmd.includes('library') || lowerCmd.includes('مكتبة') || lowerCmd.includes('العاب') || lowerCmd.includes('ألعاب')) {
-      onTabChange('games');
-      speakResponse(st.lang === 'ar-SA' ? 'عودة إلى مكتبة الألعاب.' : 'Returning to your library.');
-      return;
-    } else if (lowerCmd.includes('stop') || lowerCmd.includes('shut up') || lowerCmd.includes('cancel') || lowerCmd.includes('توقف') || lowerCmd.includes('اسكت') || lowerCmd.includes('إغلاق')) {
-       speakResponse(st.lang === 'ar-SA' ? 'حسناً، سأتوقف.' : 'Okay, stopping.');
-       manualStopRef.current = true;
-       recognition.stop();
-       return;
-    }
+    if (!st.apiKey) return;
 
-    // If no local command matches, ask Gemini!
-    if (st.apiKey) {
-      try {
-        setTranscript(st.lang === 'ar-SA' ? 'نيكسوس يفكر...' : 'Nexus is thinking...');
-        const genAI = new GoogleGenerativeAI(st.apiKey);
-        const model = genAI.getGenerativeModel({ 
-          model: "gemini-2.5-flash",
-          systemInstruction: st.lang === 'ar-SA' ? "أنت نيكسوس، مساعد ألعاب ذكي ومتطور مدمج في محطة ألعاب MNova. كن مختصراً جداً، جملة أو جملتين كحد أقصى. تصرف مثل مساعد شخصي ذكي للألعاب وتحدث باللغة العربية." : "You are Nexus, a cool AI gaming assistant integrated into the MNova Game Station. Be extremely concise, max 1 or 2 sentences. Act like JARVIS from Iron Man but for gaming."
-        });
-        const result = await model.generateContent(command);
-        const textRes = result.response.text().replace(/\*/g, ''); // Clean markdown formatting
-        speakResponse(textRes);
-      } catch (e) {
-        console.error(e);
-        speakResponse(st.lang === 'ar-SA' ? 'حدث خطأ في الاتصال بالشبكة العصبية، تأكد من مفتاح API.' : 'I encountered an error connecting to my neural network. Please check your API key.');
+    try {
+      const genAI = new GoogleGenerativeAI(st.apiKey);
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-2.5-flash",
+        systemInstruction: st.lang === 'ar-SA' ? 
+          "أنت نيكسوس، مساعد ألعاب ذكي في واجهة MNova. استمع لطلب المستخدم وأجب بذكاء. الأوامر المتاحة: 1. لتشغيل لعبة: <LAUNCH: اسم اللعبة>. 2. للأخبار: <TAB: news>. 3. للوسائط: <TAB: media>. 4. للصور: <TAB: screenshots>. الألعاب المتاحة: " + st.games.map(g => g.title).join(', ') : 
+          "You are Nexus, a smart gaming assistant in MNova. Commands: 1. Launch a game: <LAUNCH: GameName>. 2. Open News: <TAB: news>. 3. Open Media: <TAB: media>. 4. Open Screenshots: <TAB: screenshots>. Available games: " + st.games.map(g => g.title).join(', ')
+      });
+
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            data: base64Audio,
+            mimeType: "audio/webm"
+          }
+        },
+        { text: st.lang === 'ar-SA' ? "ماذا قال المستخدم؟ أجب عليه أو نفذ الأمر." : "What did the user say? Reply or execute command." }
+      ]);
+      
+      const textRes = result.response.text().replace(/\*/g, '');
+      
+      // Parse commands
+      if (textRes.includes('<LAUNCH:')) {
+        const gameNameMatch = textRes.match(/<LAUNCH:\s*([^>]+)>/);
+        if (gameNameMatch) {
+          const gameName = gameNameMatch[1].trim().toLowerCase();
+          const game = st.games.find(g => g.title.toLowerCase().includes(gameName) || gameName.includes(g.title.toLowerCase()));
+          if (game) {
+            speakResponse(st.lang === 'ar-SA' ? `جاري تشغيل ${game.title}، استمتع!` : `Launching ${game.title}, have fun!`);
+            setTimeout(() => onLaunchGame(game), 2000);
+            return;
+          }
+        }
+      } else if (textRes.includes('<TAB:')) {
+        const tabMatch = textRes.match(/<TAB:\s*([^>]+)>/);
+        if (tabMatch) {
+          const tabName = tabMatch[1].trim().toLowerCase();
+          onTabChange(tabName);
+          const tabNames = { news: 'الأخبار', media: 'الوسائط', screenshots: 'الصور' };
+          speakResponse(st.lang === 'ar-SA' ? `أفتح قسم ${tabNames[tabName] || tabName}.` : `Opening ${tabName}.`);
+          return;
+        }
       }
-    } else {
-      speakResponse(st.lang === 'ar-SA' ? `سمعت "${command}". أضف مفتاح Gemini في الإعدادات للمحادثة معي!` : `I heard "${command}". Click the settings icon to add a free Gemini API key and chat with me!`);
+
+      speakResponse(textRes.trim());
+    } catch (e) {
+      console.error(e);
+      if (e.message.includes('API key not valid')) {
+        speakResponse(st.lang === 'ar-SA' ? 'مفتاح Gemini غير صحيح، يرجى التحقق منه.' : 'Invalid Gemini API Key.');
+      } else {
+        speakResponse(st.lang === 'ar-SA' ? 'حدث خطأ في الاتصال بالشبكة العصبية.' : 'Network error connecting to Gemini.');
+      }
     }
   };
 
@@ -315,11 +272,25 @@ export default function NexusAI({ games, onLaunchGame, onTabChange }) {
         </div>
       )}
 
-      {/* Transcript Popup */}
-      {(transcript || interimTranscript) && !showSettings && (
-        <div className="mb-4 px-6 py-4 bg-cyan-950/90 backdrop-blur-xl text-cyan-50 font-semibold rounded-2xl border border-cyan-500/50 shadow-[0_0_30px_rgba(0,255,255,0.2)] animate-[slide-up_0.3s_ease-out] max-w-md leading-relaxed">
-          {interimTranscript && <span className="text-cyan-400/70 italic mr-2">{interimTranscript}</span>}
-          {transcript && <span>{transcript}</span>}
+      {/* Transcript & Visualizer Popup */}
+      {transcript && !showSettings && (
+        <div className="mb-4 px-6 py-4 bg-cyan-950/90 backdrop-blur-xl text-cyan-50 font-semibold rounded-2xl border border-cyan-500/50 shadow-[0_0_30px_rgba(0,255,255,0.2)] animate-[slide-up_0.3s_ease-out] max-w-md leading-relaxed flex items-center gap-4">
+          
+          {(isListening || isSpeaking) && (
+            <div className="flex items-center gap-1 h-6">
+              <div className="w-1.5 bg-cyan-400 rounded-full animate-[sound-wave_1s_ease-in-out_infinite]" style={{ animationDelay: '0s' }}></div>
+              <div className="w-1.5 bg-cyan-400 rounded-full animate-[sound-wave_1s_ease-in-out_infinite]" style={{ animationDelay: '0.2s' }}></div>
+              <div className="w-1.5 bg-cyan-400 rounded-full animate-[sound-wave_1s_ease-in-out_infinite]" style={{ animationDelay: '0.4s' }}></div>
+              <style>{`
+                @keyframes sound-wave {
+                  0%, 100% { height: 6px; }
+                  50% { height: 24px; }
+                }
+              `}</style>
+            </div>
+          )}
+          
+          <span>{transcript}</span>
         </div>
       )}
       

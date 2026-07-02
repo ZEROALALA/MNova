@@ -217,6 +217,19 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(() => {
+    const { session } = require('electron');
+    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+      if (permission === 'media') {
+        callback(true);
+      } else {
+        callback(true);
+      }
+    });
+    session.defaultSession.setPermissionCheckHandler((webContents, permission) => {
+      if (permission === 'media') return true;
+      return true;
+    });
+
     createWindow();
     createOverlay();
     globalShortcut.register('CommandOrControl+Shift+G', toggleOverlay);
@@ -596,6 +609,37 @@ ipcMain.handle('get-video-url', async (event, appid) => {
     return `file://${videoPath.replace(/\\/g, '/')}`;
   }
   return await fetchSteamVideoUrl(appid);
+});
+
+// Get Game News (Steam Web API)
+ipcMain.handle('get-game-news', async (event, appid) => {
+  return new Promise(resolve => {
+    const url = `https://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=${appid}&count=5&maxlength=300&format=json`;
+    https.get(url, res => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          resolve(json.appnews?.newsitems || []);
+        } catch { resolve([]); }
+      });
+    }).on('error', () => resolve([]));
+  });
+});
+
+// Get Screenshots (Mock or local directory)
+ipcMain.handle('get-screenshots', async () => {
+  return [
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/ss_8e3d368d37fc1bc7520b7baeb7399f36f6d634fb.jpg', title: 'Cyberpunk 2077' },
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/ss_49dae360e7e174b5aebfcd105572b9a71a067ff2.jpg', title: 'Cyberpunk 2077' },
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/ss_2b724fce3f73950efcf84b42fb4495e86541f92e.jpg', title: 'Elden Ring' },
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/ss_5a54cc8d2d38e21f7bc9e32d8fb6cd29a73e6a0d.jpg', title: 'Elden Ring' },
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/ss_40d41e7ebde9687e3848b8969dc3e9702ea42805.jpg', title: 'RDR 2' },
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/ss_e15a77322bf20b57e4e840a1eb1d81a9ff6f4e41.jpg', title: 'RDR 2' },
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/ss_37762635bc971360da8ca6c8df34fc617a229a43.jpg', title: 'RDR 2' },
+    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/367520/ss_e2e42d7a2f5f14dcce68e16e6f1f4e1f729226ed.jpg', title: 'Hollow Knight' }
+  ];
 });
 
 // Download a video

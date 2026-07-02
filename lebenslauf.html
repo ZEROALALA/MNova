@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lebenslauf – M. Amin Alobidan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 30px 15px;
+    }
+
+    .cv-wrapper {
+      width: 210mm;
+      background: #ffffff;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    /* ─── HEADER ─── */
+    .cv-header {
+      background: linear-gradient(135deg, #0a2342 0%, #1a3a5c 50%, #0d3b6e 100%);
+      color: white;
+      padding: 45px 50px 35px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cv-header::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .cv-header::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      right: 80px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 35px;
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c9a84c, #f0d080);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      font-weight: 700;
+      color: #0a2342;
+      flex-shrink: 0;
+      border: 3px solid rgba(255,255,255,0.2);
+      letter-spacing: -1px;
+    }
+
+    .header-info h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+    }
+
+    .header-info .subtitle {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #c9a84c;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .header-contact {
+      margin-top: 25px;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .contact-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    /* ─── BODY ─── */
+    .cv-body {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+    }
+
+    /* LEFT COLUMN */
+    .col-left {
+      padding: 40px 40px 40px 50px;
+      border-right: 1px solid #eef2f7;
+    }
+
+    /* RIGHT COLUMN */
+    .col-right {
+      padding: 40px 35px;
+      background: #f8fafd;
+    }
+
+    /* ─── SECTION ─── */
+    .section {
+      margin-bottom: 35px;
+    }
+
+    .section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: #c9a84c;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, #c9a84c, transparent);
+    }
+
+    /* ─── TIMELINE ITEM ─── */
+    .timeline-item {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 24px;
+    }
+
+    .timeline-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #c9a84c;
+    }
+
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      left: 3.5px;
+      top: 20px;
+      width: 1px;
+      bottom: -16px;
+      background: #e0e8f0;
+    }
+
+    .timeline-item:last-child::after {
+      display: none;
+    }
+
+    .item-year {
+      font-size: 11px;
+      font-weight: 600;
+      color: #c9a84c;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .item-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #0a2342;
+      margin-bottom: 3px;
+      line-height: 1.3;
+    }
+
+    .item-org {
+      font-size: 13px;
+      color: #5a7fa0;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .item-desc {
+      font-size: 12.5px;
+      color: #555;
+      line-height: 1.65;
+    }
+
+    /* ─── SKILL BAR ─── */
+    .skill-item {
+      margin-bottom: 14px;
+    }
+
+    .skill-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .skill-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #2c3e50;
+    }
+
+    .skill-level {
+      font-size: 11px;
+      color: #8a9bb0;
+    }
+
+    .skill-bar {
+      height: 5px;
+      background: #e0e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .skill-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #c9a84c, #f0d080);
+      transition: width 0.3s;
+    }
+
+    /* ─── LANGUAGE ─── */
+    .lang-item {
+      margin-bottom: 16px;
+    }
+
+    .lang-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0a2342;
+      margin-bottom: 5px;
+    }
+
+    .lang-level {
+      font-size: 11.5px;
+      color: #7a93ac;
+      margin-bottom: 6px;
+    }
+
+    .lang-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e0e8f0;
+    }
+
+    .dot.filled {
+      background: linear-gradient(135deg, #c9a84c, #f0d080);
+    }
+
+    /* ─── TAG ─── */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 5px;
+    }
+
+    .tag {
+      background: #eef4fb;
+      color: #1a3a5c;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid #d0e0f0;
+    }
+
+    /* ─── PRINT ─── */
+    @media print {
+      body {
+        background: none;
+        padding: 0;
+      }
+
+      .cv-wrapper {
+        box-shadow: none;
+        border-radius: 0;
+        width: 100%;
+      }
+
+      @page {
+        size: A4;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="cv-wrapper">
+
+  <!-- HEADER -->
+  <div class="cv-header">
+    <div class="header-top">
+      <div class="avatar">MA</div>
+      <div class="header-info">
+        <h1>M. Amin Alobidan</h1>
+        <div class="subtitle">Student der Energiesystemtechnik</div>
+      </div>
+    </div>
+    <div class="header-contact">
+      <div class="contact-item">
+        <div class="contact-icon">📅</div>
+        20. Januar 2006
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">🌍</div>
+        Hama, Syrien
+      </div>
+      <div class="contact-item">
+        <div class="contact-icon">📍</div>
+        Adana, Türkei
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="cv-body">
+
+    <!-- LEFT -->
+    <div class="col-left">
+
+      <!-- AUSBILDUNG -->
+      <div class="section">
+        <div class="section-title">Ausbildung</div>
+
+        <div class="timeline-item">
+          <div class="item-year">2025 – Bis heute</div>
+          <div class="item-title">Bachelor of Science – Energiesystemtechnik</div>
+          <div class="item-org">Fırat Universität · Elazığ, Türkei</div>
+          <div class="item-desc">Studium der Grundlagen erneuerbarer Energiesysteme, Elektrotechnik und technischer Systemplanung.</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="item-year">2025</div>
+          <div class="item-title">Zertifikat – Unbemannte Seefahrzeuge</div>
+          <div class="item-org">Technisches Bootcamp · Elazığ, Türkei</div>
+          <div class="item-desc">Praxisorientierte Ausbildung im Bereich autonomer und unbemannter maritimer Fahrzeugsysteme.</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="item-year">2025</div>
+          <div class="item-title">Entrepreneurship- &amp; Innovations-Bootcamp</div>
+          <div class="item-org">G3 Forum Kocaeli Entrepreneurship Summit &amp; Youth Entrepreneurs Idea Marathon</div>
+          <div class="item-desc">Teilnahme an interdisziplinären Workshops zu Innovation, Startup-Entwicklung und unternehmerischem Denken.</div>
+        </div>
+      </div>
+
+      <!-- EHRENAMT -->
+      <div class="section">
+        <div class="section-title">Ehrenamtliches Engagement</div>
+
+        <div class="timeline-item">
+          <div class="item-year">2025</div>
+          <div class="item-title">Orientierungstraining für Freiwillige</div>
+          <div class="item-org">Grüner Halbmond · Türkiye Yeşilay Cemiyeti</div>
+          <div class="item-desc">Aktive Mitarbeit in gemeinnützigen Projekten sowie Teilnahme an Schulungen zur Freiwilligenarbeit und gesellschaftlichem Engagement.</div>
+        </div>
+      </div>
+
+      <!-- FÄHIGKEITEN -->
+      <div class="section">
+        <div class="section-title">Berufliche &amp; Technische Fähigkeiten</div>
+
+        <div class="timeline-item">
+          <div class="item-year">Praktische Projekte</div>
+          <div class="item-desc">Durchführung unabhängiger chemischer und physikalischer Experimente – u.&nbsp;a. hitzebasierte botanische Extraktionsverfahren. Stärken: präzises, schrittweises Problemlösen und sorgfältige Dokumentation.</div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="item-year">Technische IT-Kenntnisse</div>
+          <div class="item-desc">Erfahrung in Hardware-Optimierung, Software-Modding sowie dem Einsatz KI-gestützter digitaler Tools und professioneller Kreativsoftware für akademische und praktische Projekte.</div>
+        </div>
+
+        <div class="tags" style="margin-top:-10px; margin-left:22px;">
+          <span class="tag">Hardware-Optimierung</span>
+          <span class="tag">Software-Modding</span>
+          <span class="tag">KI-Tools</span>
+          <span class="tag">Kreativsoftware</span>
+          <span class="tag">Chemische Experimente</span>
+          <span class="tag">Problemlösung</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-right">
+
+      <!-- PROFIL -->
+      <div class="section">
+        <div class="section-title">Profil</div>
+        <p style="font-size:12.5px; color:#555; line-height:1.7;">
+          Motivierter und wissbegieriger Ingenieurstudent mit einem ausgeprägten Interesse an Energietechnologien, Innovation und interdisziplinären Projekten. Engagiert in der Verbindung von Theorie und Praxis.
+        </p>
+      </div>
+
+      <!-- SPRACHEN -->
+      <div class="section">
+        <div class="section-title">Sprachen</div>
+
+        <div class="lang-item">
+          <div class="lang-name">Arabisch</div>
+          <div class="lang-level">Muttersprache</div>
+          <div class="lang-dots">
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+          </div>
+        </div>
+
+        <div class="lang-item">
+          <div class="lang-name">Türkisch</div>
+          <div class="lang-level">Fließend · C1</div>
+          <div class="lang-dots">
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+
+        <div class="lang-item">
+          <div class="lang-name">Deutsch</div>
+          <div class="lang-level">Grundkenntnisse · A2</div>
+          <div class="lang-dots">
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TECHNISCHE KOMPETENZEN -->
+      <div class="section">
+        <div class="section-title">Kompetenzen</div>
+
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Praktische Experimente</span>
+            <span class="skill-level">Sehr gut</span>
+          </div>
+          <div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div>
+        </div>
+
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">IT &amp; Hardware</span>
+            <span class="skill-level">Gut</span>
+          </div>
+          <div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div>
+        </div>
+
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">KI-Tools &amp; Software</span>
+            <span class="skill-level">Gut</span>
+          </div>
+          <div class="skill-bar"><div class="skill-fill" style="width:72%"></div></div>
+        </div>
+
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Teamarbeit &amp; Kommunikation</span>
+            <span class="skill-level">Sehr gut</span>
+          </div>
+          <div class="skill-bar"><div class="skill-fill" style="width:88%"></div></div>
+        </div>
+
+        <div class="skill-item">
+          <div class="skill-header">
+            <span class="skill-name">Problemlösung</span>
+            <span class="skill-level">Ausgezeichnet</span>
+          </div>
+          <div class="skill-bar"><div class="skill-fill" style="width:92%"></div></div>
+        </div>
+      </div>
+
+      <!-- INTERESSEN -->
+      <div class="section">
+        <div class="section-title">Interessen</div>
+        <div class="tags">
+          <span class="tag">Erneuerbare Energien</span>
+          <span class="tag">Technologie</span>
+          <span class="tag">Robotik</span>
+          <span class="tag">Innovation</span>
+          <span class="tag">Ehrenamt</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
