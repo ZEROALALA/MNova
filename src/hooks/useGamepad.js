@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 export default function useGamepad(onAction) {
   const [connected, setConnected] = useState(false);
   const activeButtons = useRef(new Set());
+  const latestGamepadRef = useRef(null);
 
   useEffect(() => {
     let animationFrame;
@@ -11,6 +12,8 @@ export default function useGamepad(onAction) {
       const gamepads = navigator.getGamepads();
       let isAnyConnected = false;
       const currentFrameActive = new Set();
+
+      let activeGamepad = null;
 
       const checks = [
         { action: 'LEFT', check: (gp) => gp.buttons[14]?.pressed || gp.axes[0] < -0.5 },
@@ -28,6 +31,7 @@ export default function useGamepad(onAction) {
       for (const gp of gamepads) {
         if (!gp) continue;
         isAnyConnected = true;
+        activeGamepad = gp;
 
         for (const { action, check } of checks) {
           if (check(gp)) {
@@ -35,6 +39,7 @@ export default function useGamepad(onAction) {
           }
         }
       }
+      latestGamepadRef.current = activeGamepad;
 
       for (const { action } of checks) {
         if (currentFrameActive.has(action)) {
@@ -46,7 +51,7 @@ export default function useGamepad(onAction) {
           activeButtons.current.delete(action);
         }
       }
-      
+
       setConnected(isAnyConnected);
       animationFrame = requestAnimationFrame(checkGamepad);
     };
@@ -59,12 +64,12 @@ export default function useGamepad(onAction) {
     };
     const handleDisconnect = () => {
       const gamepads = navigator.getGamepads();
-      setConnected(Array.from(gamepads).some(gp => gp !== null));
+      setConnected(Array.from(gamepads).some((gp) => gp !== null));
     };
 
     window.addEventListener('gamepadconnected', handleConnect);
     window.addEventListener('gamepaddisconnected', handleDisconnect);
-    
+
     animationFrame = requestAnimationFrame(checkGamepad);
 
     return () => {
@@ -74,5 +79,21 @@ export default function useGamepad(onAction) {
     };
   }, [onAction]);
 
-  return { connected };
+  const vibrate = (duration = 50, weak = 0.5, strong = 0) => {
+    const gp = latestGamepadRef.current;
+    if (gp && gp.vibrationActuator) {
+      try {
+        gp.vibrationActuator.playEffect('dual-rumble', {
+          startDelay: 0,
+          duration: duration,
+          weakMagnitude: weak,
+          strongMagnitude: strong,
+        });
+      } catch (e) {
+        // Ignore unsupported haptics
+      }
+    }
+  };
+
+  return { connected, vibrate };
 }

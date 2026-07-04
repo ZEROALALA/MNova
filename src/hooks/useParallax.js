@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
-export default function useParallax(intensity = 30) {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+export default function useParallax(intensity = 30, inverse = false) {
+  const ref = useRef(null);
 
   useEffect(() => {
     let animationFrameId;
@@ -16,11 +16,15 @@ export default function useParallax(intensity = 30) {
     };
 
     const animate = () => {
-      // Smooth easing
       currentX += (targetX - currentX) * 0.05;
       currentY += (targetY - currentY) * 0.05;
+
+      if (ref.current) {
+        const x = inverse ? -currentX : currentX;
+        const y = inverse ? -currentY : currentY;
+        ref.current.style.transform = `translate3d(${x}px, ${y}px, 0px) scale(1.05)`;
+      }
       
-      setOffset({ x: currentX, y: currentY });
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -31,7 +35,7 @@ export default function useParallax(intensity = 30) {
       window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [intensity]);
+  }, [intensity, inverse]);
 
-  return offset;
+  return ref;
 }

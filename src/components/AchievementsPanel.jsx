@@ -90,7 +90,9 @@ export default function AchievementsPanel({ game }) {
               src={ach.achieved ? ach.icon : ach.iconGray}
               alt={ach.name}
               className="w-10 h-10 rounded-lg"
-              onError={(e) => { e.target.style.display = 'none'; }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
             />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{ach.name}</p>
@@ -114,9 +116,13 @@ export default function AchievementsPanel({ game }) {
           className="flex items-center gap-1 text-xs text-white/50 hover:text-white/80 transition-colors mx-auto mt-2"
         >
           {expanded ? (
-            <>Show less <ChevronUp size={14} /></>
+            <>
+              Show less <ChevronUp size={14} />
+            </>
           ) : (
-            <>Show all {data.total} <ChevronDown size={14} /></>
+            <>
+              Show all {data.total} <ChevronDown size={14} />
+            </>
           )}
         </button>
       )}

@@ -47,22 +47,20 @@ export default function ManualAchievementsEditor({ game }) {
   };
 
   const toggleAchieved = (id) => {
-    const updated = achievements.map(a =>
-      a.id === id ? { ...a, achieved: !a.achieved } : a
-    );
+    const updated = achievements.map((a) => (a.id === id ? { ...a, achieved: !a.achieved } : a));
     setAchievements(updated);
     persist(updated);
   };
 
   const handleDelete = (id) => {
-    const updated = achievements.filter(a => a.id !== id);
+    const updated = achievements.filter((a) => a.id !== id);
     setAchievements(updated);
     persist(updated);
   };
 
   if (!game || game.isSteam) return null;
 
-  const achieved = achievements.filter(a => a.achieved).length;
+  const achieved = achievements.filter((a) => a.achieved).length;
   const total = achievements.length;
   const percentage = total > 0 ? Math.round((achieved / total) * 100) : 0;
 
@@ -133,7 +131,9 @@ export default function ManualAchievementsEditor({ game }) {
               {ach.achieved && <Check size={14} className="text-white" />}
             </button>
             <div className="flex-1 min-w-0">
-              <p className={`text-sm font-medium truncate ${ach.achieved ? 'text-white' : 'text-white/60'}`}>
+              <p
+                className={`text-sm font-medium truncate ${ach.achieved ? 'text-white' : 'text-white/60'}`}
+              >
                 {ach.name}
               </p>
               {ach.description && (

@@ -10,11 +10,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "oxlint",
     "preview": "vite preview",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron . --dev\"",
     "electron:build": "vite build && electron-builder",
-    "electron:start": "electron ."
+    "electron:start": "electron .",
+    "lint:check": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "format:fix": "prettier --write \"src/**/*.{js,jsx,css}\"",
+    "suggest:cleanup": "knip"
   },
   "build": {
     "appId": "com.mnova.gamestation",
@@ -39,9 +41,14 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@tailwindcss/vite": "^4.3.2",
+    "@xenova/transformers": "^2.17.2",
     "discord-rpc": "^4.0.1",
+    "firebase": "^12.15.0",
+    "hls.js": "^1.6.16",
     "idb-keyval": "^6.2.6",
     "lucide-react": "^1.22.0",
+    "node-edge-tts": "^1.2.10",
+    "playfab-web-sdk": "^1.205.251205",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "systeminformation": "^5.31.11",
@@ -55,8 +62,10 @@
     "concurrently": "^10.0.3",
     "electron": "^43.0.0",
     "electron-builder": "^26.15.3",
+    "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
+    "knip": "^6.24.0",
     "oxlint": "^1.71.0",
     "postcss": "^8.5.16",
     "prettier": "^3.9.4",

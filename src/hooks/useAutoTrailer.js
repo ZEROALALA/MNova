@@ -5,13 +5,13 @@ export default function useAutoTrailer(selectedGame, delay = 2000) {
   const [trailerUrl, setTrailerUrl] = useState(null);
 
   useEffect(() => {
-    setTrailerUrl(null); 
+    setTrailerUrl(null);
 
     if (!selectedGame || selectedGame.isAddCard || selectedGame.isGridCard) return;
 
     // If user already provided a video, prioritize that.
     if (selectedGame.videoUrls?.length > 0 || selectedGame.videoUrl) return;
-    
+
     // Only attempt if we have a steamId to query the Steam Store API
     if (!selectedGame.steamId) return;
 

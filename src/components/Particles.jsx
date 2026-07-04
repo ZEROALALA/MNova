@@ -11,13 +11,16 @@ export default function Particles({ count = 40 }) {
       duration: Math.random() * 20 + 15, // 15s to 35s
       delay: Math.random() * -20, // Negative delay so they are already on screen
       opacity: Math.random() * 0.4 + 0.1,
-      drift: (Math.random() - 0.5) * 100 // -50px to 50px drift
+      drift: (Math.random() - 0.5) * 100, // -50px to 50px drift
     }));
     setParticles(newParticles);
   }, [count]);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 mix-blend-screen" style={{ zIndex: 5 }}>
+    <div
+      className="absolute inset-0 overflow-hidden pointer-events-none z-0 mix-blend-screen"
+      style={{ zIndex: 5 }}
+    >
       <style>
         {`
           @keyframes global-particle-float {
@@ -28,7 +31,7 @@ export default function Particles({ count = 40 }) {
           }
         `}
       </style>
-      {particles.map(p => (
+      {particles.map((p) => (
         <div
           key={p.id}
           className="absolute rounded-full bg-white"
@@ -40,7 +43,7 @@ export default function Particles({ count = 40 }) {
             '--max-opacity': p.opacity,
             '--drift': `${p.drift}px`,
             animation: `global-particle-float ${p.duration}s linear ${p.delay}s infinite`,
-            boxShadow: `0 0 ${p.size * 3}px rgba(255,255,255,0.8)`
+            boxShadow: `0 0 ${p.size * 3}px rgba(255,255,255,0.8)`,
           }}
         />
       ))}

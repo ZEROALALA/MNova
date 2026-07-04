@@ -1,8 +1,8 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
   --font-sans: 'Inter', system-ui, sans-serif;
-  
+
   /* PS5-inspired color palette */
   --color-ps-blue: #00439c;
   --color-ps-dark: #0a0a0f;
@@ -10,7 +10,7 @@
   --color-ps-text: #ffffff;
   --color-ps-subtext: #8888aa;
   --color-ps-accent: #0070d1;
-  
+
   /* Animations */
   --animate-float: float 6s ease-in-out infinite;
   --animate-pulse-slow: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -22,66 +22,152 @@
    ═══════════════════════════════════════════ */
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 @keyframes pulse-slow {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(255,255,255,0.3), 0 0 20px rgba(255,255,255,0.1); }
-  50% { box-shadow: 0 0 16px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.2); }
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(255, 255, 255, 0.3),
+      0 0 20px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 16px rgba(255, 255, 255, 0.5),
+      0 0 40px rgba(255, 255, 255, 0.2);
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
 }
 
 @keyframes light-ray {
-  0% { opacity: 0; transform: rotate(-30deg) translateX(-100%); }
-  30% { opacity: 0.6; }
-  100% { opacity: 0; transform: rotate(-30deg) translateX(200%); }
+  0% {
+    opacity: 0;
+    transform: rotate(-30deg) translateX(-100%);
+  }
+  30% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-30deg) translateX(200%);
+  }
 }
 
 @keyframes particle-float {
-  0% { transform: translateY(0) translateX(0); opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 0.6; }
-  100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(50px);
+    opacity: 0;
+  }
 }
 
 @keyframes ken-burns {
-  0% { transform: scale(1) translate(0, 0); }
-  50% { transform: scale(1.08) translate(-1%, -1%); }
-  100% { transform: scale(1) translate(0, 0); }
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.08) translate(-1%, -1%);
+  }
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
 }
 
 @keyframes trophy-shine {
-  0% { filter: brightness(1); }
-  50% { filter: brightness(1.3); }
-  100% { filter: brightness(1); }
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+  100% {
+    filter: brightness(1);
+  }
 }
 
 /* ═══════════════════════════════════════════
    BASE STYLES
    ═══════════════════════════════════════════ */
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100vh;
@@ -124,7 +210,7 @@ html, body {
 
 .game-card-selected {
   border: 2.5px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 
+  box-shadow:
     0 0 12px rgba(255, 255, 255, 0.4),
     0 0 30px rgba(255, 255, 255, 0.15),
     0 8px 25px rgba(0, 0, 0, 0.5);
@@ -149,15 +235,20 @@ html, body {
    ═══════════════════════════════════════════ */
 
 .ps5-gradient-top {
-  background: linear-gradient(to bottom, rgba(10,10,15,0.85) 0%, transparent 35%);
+  background: linear-gradient(to bottom, rgba(10, 10, 15, 0.85) 0%, transparent 35%);
 }
 
 .ps5-gradient-bottom {
-  background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.7) 30%, transparent 65%);
+  background: linear-gradient(
+    to top,
+    rgba(10, 10, 15, 0.95) 0%,
+    rgba(10, 10, 15, 0.7) 30%,
+    transparent 65%
+  );
 }
 
 .ps5-gradient-left {
-  background: linear-gradient(to right, rgba(10,10,15,0.8) 0%, transparent 45%);
+  background: linear-gradient(to right, rgba(10, 10, 15, 0.8) 0%, transparent 45%);
 }
 
 /* ═══════════════════════════════════════════
@@ -179,7 +270,7 @@ html, body {
 
 .ps5-play-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 20px rgba(255,255,255,0.3);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
 }
 
 .ps5-play-btn:active {
@@ -190,9 +281,9 @@ html, body {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: white;
   font-size: 24px;
   display: flex;
@@ -203,17 +294,51 @@ html, body {
 }
 
 .ps5-more-btn:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   transform: scale(1.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* 
+  Global Dynamic Theming: 
+  The app wrapper gets a hue-rotate(var(--app-hue)).
+  We reverse it on images, videos, and specific elements so media stays original color!
+*/
+img,
+video,
+.no-hue {
+  filter: hue-rotate(calc(-1 * var(--app-hue, 0deg)));
+  transition: filter 0.5s ease;
+}
+
+@keyframes title-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* ═══════════════════════════════════════════
    TROPHY COLORS
    ═══════════════════════════════════════════ */
 
-.trophy-gold { color: #ffb636; }
-.trophy-silver { color: #c0c0c0; }
-.trophy-bronze { color: #cd7f32; }
+.trophy-gold {
+  color: #ffb636;
+}
+.trophy-silver {
+  color: #c0c0c0;
+}
+.trophy-bronze {
+  color: #cd7f32;
+}
 
 /* ═══════════════════════════════════════════
    STARTUP SCREEN
@@ -256,7 +381,7 @@ html, body {
   font-size: 20px;
   font-weight: 700;
   padding: 4px 0;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255, 255, 255, 0.35);
   cursor: pointer;
   transition: color 0.3s ease;
   position: relative;
@@ -285,14 +410,14 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(6px);
   border-radius: 4px;
   padding: 2px 8px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ═══════════════════════════════════════════
@@ -311,27 +436,53 @@ html, body {
   animation: ken-burns 20s ease-in-out infinite;
 }
 
-
-
 /* ═══════════════════════════════════════════
    NEXUS AI UI
    ═══════════════════════════════════════════ */
 
 @keyframes cyber-scan {
-  0% { transform: translateY(-100%); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(100%); opacity: 0; }
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
 }
 
 @keyframes hologram-flicker {
-  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-  20%, 24%, 55% { opacity: 0.8; filter: hue-rotate(10deg); }
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    opacity: 1;
+  }
+  20%,
+  24%,
+  55% {
+    opacity: 0.8;
+    filter: hue-rotate(10deg);
+  }
 }
 
 @keyframes data-flow {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100%; }
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
 }
 
 .nexus-perspective {
@@ -354,7 +505,9 @@ html, body {
 
 .nexus-card.active {
   border: 1px solid rgba(0, 255, 255, 0.8);
-  box-shadow: 0 0 40px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.2);
+  box-shadow:
+    0 0 40px rgba(0, 255, 255, 0.3),
+    inset 0 0 20px rgba(0, 255, 255, 0.2);
   animation: hologram-flicker 4s infinite;
 }
 
@@ -372,5 +525,12 @@ html, body {
 }
 
 .nexus-btn {
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  clip-path: polygon(
+    10px 0,
+    100% 0,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0 100%,
+    0 10px
+  );
 }

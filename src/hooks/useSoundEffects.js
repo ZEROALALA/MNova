@@ -59,7 +59,7 @@ export default function useSoundEffects() {
 
   const playPremiumLaunch = useCallback(() => {
     const ctx = getCtx();
-    
+
     // Low bass sweep
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
@@ -71,7 +71,7 @@ export default function useSoundEffects() {
     gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
     osc1.connect(gain1);
     gain1.connect(ctx.destination);
-    
+
     // High chime
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
@@ -90,9 +90,9 @@ export default function useSoundEffects() {
     osc2.stop(ctx.currentTime + 0.7);
   }, []);
 
-  return { 
-    playNav: playPremiumNav, 
-    playConfirm: playPremiumConfirm, 
-    playLaunch: playPremiumLaunch 
+  return {
+    playNav: playPremiumNav,
+    playConfirm: playPremiumConfirm,
+    playLaunch: playPremiumLaunch,
   };
 }

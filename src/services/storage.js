@@ -7,6 +7,7 @@ import { get, set, del } from 'idb-keyval';
  */
 
 const CUSTOM_GAMES_KEY = 'mnova_custom_games';
+const DELETED_GAMES_KEY = 'mnova_deleted_games';
 
 export const storage = {
   // Save an asset (image/video file) and return a local blob URL
@@ -39,11 +40,21 @@ export const storage = {
     await del(`asset_${id}`);
   },
 
+  // Save the list of deleted game IDs
+  async saveDeletedGames(ids) {
+    await set(DELETED_GAMES_KEY, ids);
+  },
+
+  // Get the list of deleted game IDs
+  async getDeletedGames() {
+    return (await get(DELETED_GAMES_KEY)) || [];
+  },
+
   getTheme: () => {
     return localStorage.getItem('gs_theme') || 'ps5';
   },
 
   saveTheme: (theme) => {
     localStorage.setItem('gs_theme', theme);
-  }
+  },
 };

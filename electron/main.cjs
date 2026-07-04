@@ -1,12 +1,17 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, nativeImage, Tray, Menu, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, nativeImage, Tray, Menu, globalShortcut, desktopCapturer } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const si = require('systeminformation');
+
+// Path for caching trending media
+const TRENDING_CACHE_FILE = path.join(app.getPath('userData'), 'trending_cache_v2.json');
+const CACHE_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const { exec } = require('child_process');
 const https = require('https');
 const http = require('http');
 const os = require('os');
 const DiscordRPC = require('discord-rpc');
-const si = require('systeminformation');
+
 
 const clientId = '1326442805202817084'; // Custom MNova Discord Client ID (dummy fallback)
 DiscordRPC.register(clientId);
@@ -32,12 +37,7 @@ function clearDiscordActivity() {
   rpc.clearActivity().catch(() => {});
 }
 
-// ─── HARDWARE ACCELERATION & NVIDIA OPTIMIZATION ───
-// Force high performance GPU and enable advanced rendering features
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('disable-software-rasterizer');
+// ─── OPTIMIZATIONS ───
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('js-flags', '--expose-gc');
 
@@ -61,10 +61,21 @@ function disableFocusMode() {
 let overlayWindow = null;
 function createOverlay() {
   if (overlayWindow) return;
+  const { screen } = require('electron');
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.bounds;
+
+  const overlayWidth = width;
+  const overlayHeight = Math.floor(height * 0.25);
+  const x = 0;
+  const y = height - overlayHeight;
+
   overlayWindow = new BrowserWindow({
-    width: 800, height: 600,
-    transparent: true, frame: false, alwaysOnTop: true, fullscreen: true,
+    width: overlayWidth, height: overlayHeight, x, y,
+    transparent: true, frame: false, alwaysOnTop: true,
+    backgroundColor: '#00000000',
     skipTaskbar: true, show: false,
+    resizable: false, movable: false, focusable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false, 
@@ -72,13 +83,16 @@ function createOverlay() {
       webviewTag: true
     }
   });
-  overlayWindow.setIgnoreMouseEvents(false);
+  
+  // CRITICAL: Ignore mouse events so it never steals focus or intercepts clicks meant for the game
+  overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+  overlayWindow.setAlwaysOnTop(true, 'pop-up-menu');
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   
-  if (process.env.NODE_ENV === 'development') {
+  if (isDev) {
     overlayWindow.loadURL('http://localhost:5173/#/overlay');
   } else {
-    overlayWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: 'overlay' });
+    overlayWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'), { hash: 'overlay' });
   }
   overlayWindow.on('closed', () => { overlayWindow = null; });
 }
@@ -88,8 +102,9 @@ function toggleOverlay() {
   if (overlayWindow.isVisible()) {
     overlayWindow.hide();
   } else {
-    overlayWindow.show();
-    overlayWindow.focus();
+    overlayWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+    overlayWindow.showInactive();
+    overlayWindow.moveTop();
   }
 }
 
@@ -99,6 +114,7 @@ const COVERS_DIR = path.join(app.getPath('userData'), 'assets', 'covers');
 const VIDEOS_DIR = path.join(app.getPath('userData'), 'assets', 'videos');
 const GAMES_FILE = path.join(DATA_DIR, 'games.json');
 const ACHIEVEMENTS_FILE = path.join(DATA_DIR, 'achievements.json');
+const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
 // Ensure directories exist
 [DATA_DIR, COVERS_DIR, VIDEOS_DIR].forEach(dir => {
@@ -216,7 +232,130 @@ if (!gotTheLock) {
     }
   });
 
-  app.whenReady().then(() => {
+// ─── SPEECH HANDLERS ───
+const { generateSpeechBuffer, transcribeAudioBuffer, setGroqApiKey } = require('./speech-handler.cjs');
+
+ipcMain.handle('generate-speech', async (event, text, voice) => {
+  return await generateSpeechBuffer(text, voice);
+});
+
+ipcMain.handle('transcribe-audio', async (event, buffer, mimetype) => {
+  return await transcribeAudioBuffer(buffer, mimetype);
+});
+
+ipcMain.handle('set-groq-key', (event, key) => {
+  setGroqApiKey(key);
+});
+
+// Handle getting trending media from Steam
+ipcMain.handle('get-trending-media', async () => {
+  try {
+    // Check cache first
+    if (fs.existsSync(TRENDING_CACHE_FILE)) {
+      const cacheData = JSON.parse(fs.readFileSync(TRENDING_CACHE_FILE, 'utf-8'));
+      if (Date.now() - cacheData.timestamp < CACHE_DURATION_MS) {
+        return cacheData.items; // Return cached items if within 30 days
+      }
+    }
+
+    const featuredRes = await fetch('https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/');
+    const categories = await featuredRes.json();
+    // Take top 20 concurrent games to find at least 5 with trailers
+    const topSellers = categories.response.ranks.slice(0, 20).map(r => ({ id: r.appid }));
+    
+    const mediaItems = [];
+    for (const game of topSellers) {
+      if (mediaItems.length >= 5) break;
+      try {
+        const detailsRes = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.id}`);
+        const detailsData = await detailsRes.json();
+        const appDetails = detailsData[game.id]?.data;
+        
+        // Ensure it is strictly a PC Game and supports Windows
+        if (!appDetails || appDetails.type !== 'game' || !appDetails.platforms?.windows) {
+          continue;
+        }
+        
+        if (appDetails.movies && appDetails.movies.length > 0) {
+          // Find the best short trailer instead of a 10-min showcase
+          let bestMovie = appDetails.movies[0];
+          for (const m of appDetails.movies) {
+            const name = (m.name || '').toLowerCase();
+            if (name.includes('launch trailer') || name.includes('teaser') || (name.includes('trailer') && !name.includes('gameplay'))) {
+              bestMovie = m;
+              break;
+            }
+          }
+          
+          // Steam API now uses hls_h264
+          const videoUrl = bestMovie.hls_h264 || bestMovie.dash_av1 || (bestMovie.webm && bestMovie.webm.max);
+          
+          if (videoUrl) {
+            mediaItems.push({
+              id: game.id.toString(),
+              title: appDetails.name,
+              image: appDetails.header_image || appDetails.capsule_image,
+              videoUrl: videoUrl,
+              developer: appDetails.developers ? appDetails.developers[0] : 'Unknown'
+            });
+          }
+        }
+      } catch (e) {
+        console.error(`Error fetching details for ${game.id}`, e);
+      }
+    }
+    
+    // Save to cache
+    fs.writeFileSync(TRENDING_CACHE_FILE, JSON.stringify({
+      timestamp: Date.now(),
+      items: mediaItems
+    }));
+
+    return mediaItems;
+  } catch (error) {
+    console.error("Failed to fetch trending media:", error);
+    throw error;
+  }
+});
+
+// Handle getting REAL hardware stats
+ipcMain.handle('get-system-stats', async () => {
+  try {
+    const cpuLoad = await si.currentLoad();
+    const mem = await si.mem();
+    const net = await si.networkStats('*');
+    const disk = await si.fsSize();
+    
+    // Sum network stats across all active interfaces
+    let totalRxSec = 0;
+    let totalTxSec = 0;
+    if (Array.isArray(net)) {
+      for (const iface of net) {
+        totalRxSec += (iface.rx_sec || 0);
+        totalTxSec += (iface.tx_sec || 0);
+      }
+    }
+
+    // We get real CPU, RAM, and Disk. 
+    // GPUs and Temps require admin privileges on Windows, so we leave them null for the frontend to handle.
+    return {
+      cpuLoad: cpuLoad.currentLoad,
+      cpuUsage: cpuLoad.currentLoad,
+      ramUsage: (mem.active / mem.total) * 100,
+      memUsed: mem.active,
+      memTotal: mem.total,
+      networkDown: totalRxSec / (1024 * 1024), // MB/s
+      networkUp: totalTxSec / (1024 * 1024), // MB/s
+      disks: disk.map(d => ({ fs: d.fs, size: d.size, used: d.used, mount: d.mount }))
+    };
+  } catch (e) {
+    console.error("Failed to fetch system stats:", e);
+    return null;
+  }
+});
+
+// App lifecycle
+app.whenReady().then(async () => {
     const { session } = require('electron');
     session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
       if (permission === 'media') {
@@ -249,7 +388,7 @@ app.on('activate', () => {
 app.on('browser-window-focus', () => {
   clearDiscordActivity();
   disableFocusMode();
-  if (memoryGamesCache) {
+  if (memoryGamesCache && Array.isArray(memoryGamesCache)) {
     let updated = false;
     for (const game of memoryGamesCache) {
       if (game._lastLaunchTime) {
@@ -263,6 +402,10 @@ app.on('browser-window-focus', () => {
        try { fs.writeFileSync(GAMES_FILE, JSON.stringify(memoryGamesCache, null, 2)); } catch(e){}
     }
   }
+});
+
+ipcMain.on('log-error', (event, msg) => {
+  console.log('\n\n[RENDERER CRASH ERROR]:', msg, '\n\n');
 });
 
 // ═══════════════════════════════════════════
@@ -423,12 +566,13 @@ function fetchMetadataFromSteam(title) {
 // ═══════════════════════════════════════════
 
 function findEAGames() {
-  const eaPaths = [
-    'C:\\\\Program Files\\\\EA Games',
-    'C:\\\\Program Files (x86)\\\\EA Games',
-    'D:\\\\EA Games',
-    'E:\\\\EA Games'
-  ];
+  const drives = ['C', 'D', 'E', 'F', 'G'];
+  const folders = ['Program Files\\EA Games', 'Program Files (x86)\\EA Games', 'EA Games', 'Origin Games', 'Program Files (x86)\\Origin Games'];
+  const eaPaths = [];
+  drives.forEach(drive => {
+    folders.forEach(folder => eaPaths.push(`${drive}:\\${folder}`));
+  });
+  
   const games = [];
   
   eaPaths.forEach(dir => {
@@ -461,6 +605,84 @@ function findEAGames() {
               });
             }
           } catch {}
+        });
+      } catch {}
+    }
+  });
+  return games;
+}
+
+// ═══════════════════════════════════════════
+//  GOG GAMES LOCAL SCANNER
+// ═══════════════════════════════════════════
+
+function findGOGGames() {
+  const drives = ['C', 'D', 'E', 'F', 'G'];
+  const folders = ['Program Files (x86)\\GOG Galaxy\\Games', 'GOG Games'];
+  const paths = [];
+  drives.forEach(d => folders.forEach(f => paths.push(`${d}:\\${f}`)));
+  
+  const games = [];
+  paths.forEach(dir => {
+    if (fs.existsSync(dir)) {
+      try {
+        const gameFolders = fs.readdirSync(dir, { withFileTypes: true }).filter(d => d.isDirectory());
+        gameFolders.forEach(folder => {
+          const gameDir = path.join(dir, folder.name);
+          const exe = fs.readdirSync(gameDir).find(f => f.toLowerCase().endsWith('.exe') && !f.toLowerCase().includes('unins'));
+          if (exe) {
+            games.push({
+              id: `gog_${folder.name.replace(/\\s+/g, '')}`,
+              title: folder.name,
+              appid: '',
+              platform: 'gog',
+              isSteam: false,
+              installDir: gameDir,
+              launchUrl: '',
+              execPath: path.join(gameDir, exe),
+              coverUrl: '', backgroundUrl: '', logoUrl: '', videoUrl: '', steamId: '',
+              developer: 'GOG',
+            });
+          }
+        });
+      } catch {}
+    }
+  });
+  return games;
+}
+
+// ═══════════════════════════════════════════
+//  UBISOFT GAMES LOCAL SCANNER
+// ═══════════════════════════════════════════
+
+function findUbisoftGames() {
+  const drives = ['C', 'D', 'E', 'F', 'G'];
+  const folders = ['Program Files (x86)\\Ubisoft\\Ubisoft Game Launcher\\games', 'Ubisoft\\games'];
+  const paths = [];
+  drives.forEach(d => folders.forEach(f => paths.push(`${d}:\\${f}`)));
+  
+  const games = [];
+  paths.forEach(dir => {
+    if (fs.existsSync(dir)) {
+      try {
+        const gameFolders = fs.readdirSync(dir, { withFileTypes: true }).filter(d => d.isDirectory());
+        gameFolders.forEach(folder => {
+          const gameDir = path.join(dir, folder.name);
+          const exe = fs.readdirSync(gameDir).find(f => f.toLowerCase().endsWith('.exe') && !f.toLowerCase().includes('unins') && !f.toLowerCase().includes('crash'));
+          if (exe) {
+            games.push({
+              id: `ubi_${folder.name.replace(/\\s+/g, '')}`,
+              title: folder.name,
+              appid: '',
+              platform: 'ubisoft',
+              isSteam: false,
+              installDir: gameDir,
+              launchUrl: '',
+              execPath: path.join(gameDir, exe),
+              coverUrl: '', backgroundUrl: '', logoUrl: '', videoUrl: '', steamId: '',
+              developer: 'Ubisoft',
+            });
+          }
         });
       } catch {}
     }
@@ -556,13 +778,6 @@ ipcMain.handle('get-games', async () => {
     }
   }
 
-  const steamGames = findSteamGames();
-  const savedIds = new Set(memoryGamesCache.map(g => g.id));
-  steamGames.forEach(sg => {
-    if (!savedIds.has(sg.id)) memoryGamesCache.push(sg);
-  });
-
-  try { fs.writeFileSync(GAMES_FILE, JSON.stringify(memoryGamesCache, null, 2)); } catch(e){}
   return memoryGamesCache;
 });
 
@@ -574,7 +789,9 @@ ipcMain.handle('sync-stores', async (event) => {
   const allDiscovered = [
     ...findSteamGames(),
     ...findEpicGames(),
-    ...findEAGames()
+    ...findEAGames(),
+    ...findGOGGames(),
+    ...findUbisoftGames()
   ];
 
   for (const game of allDiscovered) {
@@ -611,36 +828,7 @@ ipcMain.handle('get-video-url', async (event, appid) => {
   return await fetchSteamVideoUrl(appid);
 });
 
-// Get Game News (Steam Web API)
-ipcMain.handle('get-game-news', async (event, appid) => {
-  return new Promise(resolve => {
-    const url = `https://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=${appid}&count=5&maxlength=300&format=json`;
-    https.get(url, res => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          resolve(json.appnews?.newsitems || []);
-        } catch { resolve([]); }
-      });
-    }).on('error', () => resolve([]));
-  });
-});
 
-// Get Screenshots (Mock or local directory)
-ipcMain.handle('get-screenshots', async () => {
-  return [
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/ss_8e3d368d37fc1bc7520b7baeb7399f36f6d634fb.jpg', title: 'Cyberpunk 2077' },
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/ss_49dae360e7e174b5aebfcd105572b9a71a067ff2.jpg', title: 'Cyberpunk 2077' },
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/ss_2b724fce3f73950efcf84b42fb4495e86541f92e.jpg', title: 'Elden Ring' },
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/ss_5a54cc8d2d38e21f7bc9e32d8fb6cd29a73e6a0d.jpg', title: 'Elden Ring' },
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/ss_40d41e7ebde9687e3848b8969dc3e9702ea42805.jpg', title: 'RDR 2' },
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/ss_e15a77322bf20b57e4e840a1eb1d81a9ff6f4e41.jpg', title: 'RDR 2' },
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/ss_37762635bc971360da8ca6c8df34fc617a229a43.jpg', title: 'RDR 2' },
-    { url: 'https://cdn.cloudflare.steamstatic.com/steam/apps/367520/ss_e2e42d7a2f5f14dcce68e16e6f1f4e1f729226ed.jpg', title: 'Hollow Knight' }
-  ];
-});
 
 // Download a video
 ipcMain.handle('download-video', async (event, appid, url) => {
@@ -865,9 +1053,39 @@ ipcMain.handle('save-games', async (event, games) => {
   return true;
 });
 
+ipcMain.handle('get-settings', async () => {
+  if (fs.existsSync(SETTINGS_FILE)) {
+    try {
+      return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8'));
+    } catch { return {}; }
+  }
+  return {};
+});
+
+ipcMain.handle('save-settings', async (event, settings) => {
+  try {
+    const existing = fs.existsSync(SETTINGS_FILE) ? JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8')) : {};
+    const newSettings = { ...existing, ...settings };
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(newSettings, null, 2));
+    return true;
+  } catch(e) { return false; }
+});
+
 // Delete a game
 ipcMain.handle('delete-game', async (event, gameId) => {
   if (memoryGamesCache) {
+    const game = memoryGamesCache.find(g => g.id === gameId);
+    if (game) {
+      // If there's a downloaded video, delete it to save space
+      const appid = game.appid || game.steamId;
+      if (appid) {
+        const videoPath = path.join(VIDEOS_DIR, `${appid}.mp4`);
+        if (fs.existsSync(videoPath)) {
+          try { fs.unlinkSync(videoPath); } catch (e) { console.error('Failed to delete video', e); }
+        }
+      }
+    }
+    
     memoryGamesCache = memoryGamesCache.filter(g => g.id !== gameId);
     try { fs.writeFileSync(GAMES_FILE, JSON.stringify(memoryGamesCache, null, 2)); } catch(e){}
   }
@@ -998,20 +1216,6 @@ ipcMain.handle('focus-window', () => {
   }
 });
 
-// System Monitor
-ipcMain.handle('get-system-stats', async () => {
-  try {
-    const cpu = await si.currentLoad();
-    const mem = await si.mem();
-    return {
-      cpuLoad: cpu.currentLoad,
-      memUsed: mem.active,
-      memTotal: mem.total
-    };
-  } catch (err) {
-    return null;
-  }
-});
 
 // Screenshots
 const SCREENSHOTS_DIR = path.join(app.getPath('userData'), 'screenshots');
@@ -1065,3 +1269,53 @@ ipcMain.handle('get-steam-trailer', async (event, appid) => {
     }).on('error', () => resolve(null));
   });
 });
+
+// --- TRANSLATOR OVERLAY SUPPORT ---
+ipcMain.on('close-overlay', () => {
+  if (overlayWindow) {
+    overlayWindow.hide();
+    const { screen } = require('electron');
+    const bounds = screen.getPrimaryDisplay().bounds;
+    overlayWindow.setBounds({ width: bounds.width, height: Math.floor(bounds.height * 0.25), x: 0, y: bounds.height - Math.floor(bounds.height * 0.25) });
+  }
+});
+
+ipcMain.on('resize-overlay', (event, width, height) => {
+  if (overlayWindow) {
+    const { screen } = require('electron');
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const finalWidth = primaryDisplay.bounds.width;
+    const finalHeight = Math.ceil(height) + 40;
+    const x = 0;
+    const y = primaryDisplay.bounds.height - finalHeight;
+    overlayWindow.setBounds({ x, y, width: finalWidth, height: finalHeight });
+  }
+});
+
+app.whenReady().then(() => {
+  createOverlay(); // Pre-load overlay window
+
+  globalShortcut.register('CommandOrControl+T', async () => {
+    try {
+      if (overlayWindow && overlayWindow.isVisible()) {
+        overlayWindow.hide();
+        return;
+      }
+      const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 1920, height: 1080 } });
+      if (sources.length > 0) {
+        const imageBase64 = sources[0].thumbnail.toDataURL();
+        if (!overlayWindow) createOverlay();
+        overlayWindow.setAlwaysOnTop(true, 'pop-up-menu', 1);
+        overlayWindow.showInactive();
+        
+        // Give React a tiny bit of time if it was just recreated
+        setTimeout(() => {
+          if (overlayWindow) overlayWindow.webContents.send('start-translation', imageBase64);
+        }, 100);
+      }
+    } catch (error) {
+      console.error("Screen capture failed:", error);
+    }
+  });
+});
+

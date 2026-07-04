@@ -6,7 +6,7 @@ export default function VideoPlayerOverlay({ videoUrls = [], isVisible, onPlayin
   const videoRef = useRef(null);
 
   // Normalize single string to array if needed for backward compatibility
-  const urls = Array.isArray(videoUrls) ? videoUrls : (videoUrls ? [videoUrls] : []);
+  const urls = Array.isArray(videoUrls) ? videoUrls : videoUrls ? [videoUrls] : [];
 
   // 3-second delay before playing
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function VideoPlayerOverlay({ videoUrls = [], isVisible, onPlayin
     // Immediately stop playing and fade UI back in when the source changes
     setShouldPlay(false);
     if (onPlayingChange) onPlayingChange(false);
-    
+
     if (isVisible && urls.length > 0) {
       timer = setTimeout(() => {
         setShouldPlay(true);
@@ -23,7 +23,7 @@ export default function VideoPlayerOverlay({ videoUrls = [], isVisible, onPlayin
     } else {
       setCurrentIndex(0); // reset index when hidden
     }
-    
+
     return () => {
       clearTimeout(timer);
       if (onPlayingChange) onPlayingChange(false); // Ensure UI comes back if unmounted
@@ -41,15 +41,15 @@ export default function VideoPlayerOverlay({ videoUrls = [], isVisible, onPlayin
   }
 
   return (
-    <div 
+    <div
       className={`absolute inset-0 z-10 transition-opacity duration-1000 bg-black pointer-events-none ${shouldPlay ? 'opacity-100' : 'opacity-0'}`}
     >
       {shouldPlay && urls[currentIndex] && (
-        <video 
+        <video
           ref={videoRef}
           key={urls[currentIndex]}
-          src={urls[currentIndex]} 
-          autoPlay 
+          src={urls[currentIndex]}
+          autoPlay
           onEnded={handleEnded}
           className="w-full h-full object-cover opacity-100"
         />

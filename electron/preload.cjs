@@ -1,5 +1,18 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+window.addEventListener('error', (event) => {
+  ipcRenderer.send('log-error', event.error ? event.error.stack : event.message);
+});
+window.addEventListener('unhandledrejection', (event) => {
+  ipcRenderer.send('log-error', event.reason ? event.reason.stack : event.reason);
+});
+
+const origError = console.error;
+console.error = (...args) => {
+  ipcRenderer.send('log-error', args.join(' '));
+  origError.apply(console, args);
+};
+
 contextBridge.exposeInMainWorld('electronAPI', {
   // Game management
   getGames: () => ipcRenderer.invoke('get-games'),
@@ -12,8 +25,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   syncStores: (steamId) => ipcRenderer.invoke('sync-stores', steamId),
 
   // Launching
-  launchGame: (launchUrl) => ipcRenderer.invoke('launch-game', launchUrl),
-  launchLocal: (execPath) => ipcRenderer.invoke('launch-local', execPath),
+  launchGame: (gameId, launchUrl) => ipcRenderer.invoke('launch-game', gameId, launchUrl),
+  launchLocal: (gameId, execPath) => ipcRenderer.invoke('launch-local', gameId, execPath),
 
   // Media & System
   getVideoUrl: (appid) => ipcRenderer.invoke('get-video-url', appid),
@@ -28,6 +41,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Steam & News & Trailers
   getSteamUser: () => ipcRenderer.invoke('get-steam-user'),
   getAchievements: (appid) => ipcRenderer.invoke('get-achievements', appid),
+  getTrendingMedia: () => ipcRenderer.invoke('get-trending-media'),
   getGameNews: (appid) => ipcRenderer.invoke('get-game-news', appid),
   getSteamTrailer: (appid) => ipcRenderer.invoke('get-steam-trailer', appid),
 
@@ -35,9 +49,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getManualAchievements: (gameId) => ipcRenderer.invoke('get-manual-achievements', gameId),
   saveManualAchievements: (gameId, achs) => ipcRenderer.invoke('save-manual-achievements', gameId, achs),
 
-  // App control
-  quit: () => ipcRenderer.invoke('quit-app'),
+  // Window Controls
+  quitApp: () => ipcRenderer.invoke('quit-app'),
   toggleFullscreen: () => ipcRenderer.invoke('toggle-fullscreen'),
   focusWindow: () => ipcRenderer.invoke('focus-window'),
-  onFocusModeStatus: (callback) => ipcRenderer.on('focus-mode-status', (event, status) => callback(status)),
+
+  // Overlay & Translation
+  closeOverlay: () => ipcRenderer.send('close-overlay'),
+  onStartTranslation: (callback) => ipcRenderer.on('start-translation', (_e, img) => callback(img)),
+  resizeOverlay: (width, height) => ipcRenderer.send('resize-overlay', width, height),
+  
+  // Focus Mode
+  onFocusModeStatus: (callback) => ipcRenderer.on('focus-mode-status', (_e, status) => callback(status)),
+
+  // Speech (Edge-TTS and Whisper)
+  generateSpeech: (text, voice) => ipcRenderer.invoke('generate-speech', text, voice),
+  transcribeAudio: (buffer, mimetype) => ipcRenderer.invoke('transcribe-audio', buffer, mimetype),
+  setGroqKey: (key) => ipcRenderer.invoke('set-groq-key', key),
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings)
 });

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/main.jsx", "electron/main.cjs"],
+  "project": ["src/**/*.{js,jsx}", "electron/**/*.{js,cjs}"],
+  "ignore": ["dist/**", "node_modules/**"],
+  "vite": {
+    "config": ["vite.config.js"]
+  }
+}

@@ -207,7 +207,7 @@ export const api = {
   // Quit app
   async quit() {
     if (isElectron) {
-      return window.electronAPI.quit();
+      return window.electronAPI.quitApp();
     }
     window.close();
   },
@@ -232,5 +232,5 @@ export const api = {
     if (isElectron && window.electronAPI.onFocusModeStatus) {
       window.electronAPI.onFocusModeStatus(callback);
     }
-  }
+  },
 };

@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function getCurrentGamerId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.gamerId;
+    }
+
+    // --- USERS COLLECTION ---
+    match /users/{userId} {
+      // Any authenticated user can read profiles (for searching friends)
+      allow read: if isAuthenticated();
+
+      // Only the owner can create/update their profile
+      allow create, update: if isOwner(userId)
+                            && request.resource.data.keys().hasAll(['gamerId', 'displayName', 'email', 'createdAt'])
+                            && request.resource.data.gamerId is string
+                            && request.resource.data.gamerId.size() >= 3
+                            && request.resource.data.gamerId.size() <= 25;
+
+      // Deletion is strictly prohibited from client-side
+      allow delete: if false;
+    }
+
+    // --- MESSAGES COLLECTION ---
+    match /messages/{messageId} {
+      // Only participants can read messages
+      // roomId is formatted as 'gamerid1_gamerid2' (sorted alphabetically)
+      allow read: if isAuthenticated() 
+                  && request.resource == null // ensure it's a read operation
+                  && (getCurrentGamerId().lower() in resource.data.roomId.split('_'));
+
+      // Only participants can send messages to the room
+      // Validates text length and anti-spam (string type, max 1000 chars)
+      allow create: if isAuthenticated() 
+                    && request.resource.data.senderId == getCurrentGamerId()
+                    && (getCurrentGamerId().lower() in request.resource.data.roomId.split('_'))
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 1000;
+
+      // Messages are IMMUTABLE. Once sent, they cannot be edited or deleted by anyone
+      allow update, delete: if false;
+    }
+  }
+}
