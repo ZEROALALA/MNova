@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NextGen Launcher | Transform Your PC into a PS5 & Xbox Console Experience</title>
+  
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="NextGen Launcher | Transform Your PC into a Console Dashboard" />
+  <meta name="description" content="Free next-generation gaming launcher for Windows. Turn your PC into a sleek PS5 and Xbox console interface. Auto-scan games, AI game assistant, real-time translation, and Steam deals." />
+  <meta name="keywords" content="game launcher, pc console frontend, ps5 pc launcher, xbox dashboard pc, steam game manager, playnite alternative, free game launcher, ai game translation" />
+  <meta name="author" content="MNova - M. Amin Alobidan" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://m-amin-alobidan.itch.io/nextgen-launcher" />
+  <meta property="og:title" content="NextGen Launcher | Free PS5 & Xbox Console Dashboard for PC" />
+  <meta property="og:description" content="Organize your games with high-end console UI, live Steam deals, and built-in AI translation. 100% Free on Windows." />
+  <meta property="og:image" content="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDY1OS5wbmc=/original/aHjzk%2B.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://m-amin-alobidan.itch.io/nextgen-launcher" />
+  <meta property="twitter:title" content="NextGen Launcher | Free Console Experience on PC" />
+  <meta property="twitter:description" content="Turn your PC into a PS5 & Xbox inspired console. 100% Free for Windows." />
+  <meta property="twitter:image" content="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDY1OS5wbmc=/original/aHjzk%2B.png" />
+
+  <!-- Google Fonts: Outfit & Cairo for smooth bilingual experience -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "NextGen Launcher",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "GameApplication, UtilitiesApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "Transform your PC into a next-gen console dashboard inspired by PS5 and Xbox.",
+    "url": "https://m-amin-alobidan.itch.io/nextgen-launcher"
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(18, 22, 33, 0.75);
+      --bg-card-hover: rgba(26, 32, 48, 0.9);
+      --accent-ps: #0070d1;
+      --accent-xbox: #107c10;
+      --accent-cyan: #00f0ff;
+      --accent-purple: #8b5cf6;
+      --accent-gradient: linear-gradient(135deg, #00f0ff 0%, #0070d1 50%, #8b5cf6 100%);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border-glow: rgba(0, 240, 255, 0.2);
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+      position: relative;
+    }
+
+    body[dir="rtl"] {
+      font-family: 'Cairo', sans-serif;
+    }
+
+    /* Background Ambient Lights */
+    .ambient-glow {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .glow-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(140px);
+      opacity: 0.18;
+      animation: float 20s infinite alternate ease-in-out;
+    }
+
+    .blob-1 {
+      width: 600px;
+      height: 600px;
+      background: #0070d1;
+      top: -100px;
+      left: -100px;
+    }
+
+    .blob-2 {
+      width: 500px;
+      height: 500px;
+      background: #8b5cf6;
+      bottom: 10%;
+      right: -100px;
+      animation-duration: 25s;
+    }
+
+    .blob-3 {
+      width: 450px;
+      height: 450px;
+      background: #107c10;
+      top: 50%;
+      left: 40%;
+      opacity: 0.1;
+      animation-duration: 18s;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, 80px) scale(1.1); }
+    }
+
+    /* Header / Nav */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(7, 9, 14, 0.7);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 8%;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .logo-badge {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-gradient);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 1.2rem;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    }
+
+    .logo-text {
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-sub {
+      color: var(--accent-cyan);
+      font-weight: 500;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .lang-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lang-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-download-nav {
+      background: var(--accent-gradient);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 15px rgba(0, 112, 209, 0.4);
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-download-nav:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 240, 255, 0.6);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 5rem 0 3rem;
+      text-align: center;
+    }
+
+    .pill-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      color: var(--accent-cyan);
+      padding: 6px 18px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.8rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5.5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+      letter-spacing: -1px;
+    }
+
+    .gradient-text {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 2.5rem;
+      font-weight: 400;
+    }
+
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 2rem;
+    }
+
+    .btn-hero-primary {
+      background: var(--accent-gradient);
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.15rem;
+      font-weight: 800;
+      padding: 16px 38px;
+      border-radius: 40px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 112, 209, 0.5);
+      transition: var(--transition);
+      border: none;
+    }
+
+    .btn-hero-primary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 15px 40px rgba(0, 240, 255, 0.7);
+    }
+
+    .btn-hero-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.05rem;
+      font-weight: 600;
+      padding: 16px 32px;
+      border-radius: 40px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: var(--transition);
+    }
+
+    .btn-hero-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .hero-meta {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* App Showcase Carousel / Mockup */
+    .showcase-wrapper {
+      margin: 3.5rem auto 5rem;
+      position: relative;
+    }
+
+    .showcase-frame {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 240, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .showcase-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+    }
+
+    .showcase-img-container {
+      position: relative;
+      width: 100%;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background: #000;
+    }
+
+    .showcase-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.4s ease;
+    }
+
+    /* Features Grid */
+    .section-title {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+
+    .section-title h2 {
+      font-size: clamp(2rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      margin-bottom: 0.8rem;
+      letter-spacing: -0.5px;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 5rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      transform: translateY(-5px);
+      border-color: rgba(0, 240, 255, 0.3);
+      box-shadow: 0 15px 35px -10px rgba(0, 112, 209, 0.3);
+    }
+
+    .feature-icon-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: grid;
+      place-items: center;
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    /* Comparison / Highlights */
+    .highlight-banner {
+      background: linear-gradient(135deg, rgba(0, 112, 209, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 48px;
+      margin-bottom: 5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 30px;
+      flex-wrap: wrap;
+      box-shadow: 0 0 50px rgba(0, 112, 209, 0.2);
+    }
+
+    .highlight-content h3 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .highlight-content p {
+      color: var(--text-muted);
+      max-width: 650px;
+      font-size: 1.05rem;
+    }
+
+    /* FAQ */
+    .faq-container {
+      max-width: 800px;
+      margin: 0 auto 5rem;
+    }
+
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      margin-bottom: 14px;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .faq-question {
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1.05rem;
+      user-select: none;
+    }
+
+    .faq-question:hover {
+      color: var(--accent-cyan);
+    }
+
+    .faq-answer {
+      padding: 0 24px 20px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      display: none;
+      line-height: 1.6;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 16px;
+    }
+
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    .faq-icon {
+      font-size: 1.4rem;
+      transition: transform 0.2s ease;
+      color: var(--accent-cyan);
+    }
+
+    /* Final CTA */
+    .final-cta {
+      text-align: center;
+      padding: 5rem 24px;
+      background: radial-gradient(circle at center, rgba(0, 112, 209, 0.2) 0%, rgba(7, 9, 14, 0) 70%);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .final-cta h2 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      margin-bottom: 1rem;
+    }
+
+    .final-cta p {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 2rem 8%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--text-main);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--accent-cyan);
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 5%; }
+      .hero { padding: 3rem 0 2rem; }
+      .feature-card { padding: 24px; }
+      .highlight-banner { padding: 30px; text-align: center; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Lights -->
+  <div class="ambient-glow">
+    <div class="glow-blob blob-1"></div>
+    <div class="glow-blob blob-2"></div>
+    <div class="glow-blob blob-3"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="#" class="logo-container">
+      <div class="logo-badge">M</div>
+      <div>
+        <div class="logo-text">NextGen Launcher</div>
+        <div class="logo-sub">By MNova</div>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <button class="lang-btn" id="langToggle">
+        <span id="langIcon">🌐</span>
+        <span id="langText">العربية</span>
+      </button>
+      <a href="https://m-amin-alobidan.itch.io/nextgen-launcher" target="_blank" class="btn-download-nav" id="navDownload">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span data-i18n="nav_download">Download Free</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Hero Section -->
+    <header class="hero">
+      <div class="pill-tag">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00f0ff; box-shadow:0 0 8px #00f0ff;"></span>
+        <span data-i18n="pill_badge">Version 1.0.0 is Live • 100% Free for PC</span>
+      </div>
+      
+      <h1>
+        <span data-i18n="hero_title_1">Transform Your PC Into a</span><br />
+        <span class="gradient-text" data-i18n="hero_title_2">Next-Gen Console Station</span>
+      </h1>
+
+      <p class="hero-desc" data-i18n="hero_desc">
+        Experience seamless console interfaces inspired by PlayStation 5 and Xbox directly on your Windows PC. Instant game detection, AI assistant, real-time in-game translation, and live Steam deals.
+      </p>
+
+      <div class="hero-cta">
+        <a href="https://m-amin-alobidan.itch.io/nextgen-launcher" target="_blank" class="btn-hero-primary">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="hero_btn_download">Download Now on itch.io</span>
+        </a>
+        <a href="#features" class="btn-hero-secondary">
+          <span data-i18n="hero_btn_explore">Explore Features</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </a>
+      </div>
+
+      <div class="hero-meta">
+        <span>✓ <span data-i18n="meta_free">100% Free Forever</span></span>
+        <span>✓ <span data-i18n="meta_win">Windows 10 / 11 64-bit</span></span>
+        <span>✓ <span data-i18n="meta_no_ads">No Ads or Telemetry</span></span>
+        <span>✓ <span data-i18n="meta_fast">Ultra Fast 128 MB</span></span>
+      </div>
+    </header>
+
+    <!-- App Showcase Mockup with Tabs -->
+    <section class="showcase-wrapper">
+      <div class="showcase-tabs">
+        <button class="tab-btn active" data-img="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDY1OS5wbmc=/original/aHjzk%2B.png">
+          🎮 <span data-i18n="tab_ps5">PS5 Style Interface</span>
+        </button>
+        <button class="tab-btn" data-img="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDY3MS5wbmc=/original/m9oSvd.png">
+          🟩 <span data-i18n="tab_xbox">Xbox Dashboard Theme</span>
+        </button>
+        <button class="tab-btn" data-img="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDY4NS5wbmc=/original/mqc7uJ.png">
+          🔮 <span data-i18n="tab_nexus">Nexus Futuristic Theme</span>
+        </button>
+        <button class="tab-btn" data-img="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDY5MS5wbmc=/original/n5Tabi.png">
+          🔥 <span data-i18n="tab_steam">Steam Store Deals</span>
+        </button>
+        <button class="tab-btn" data-img="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDcyOC5wbmc=/original/1xaMU9.png">
+          🤖 <span data-i18n="tab_ai">AI Assistant & Translator</span>
+        </button>
+      </div>
+
+      <div class="showcase-frame">
+        <div class="showcase-img-container">
+          <img id="showcaseImage" class="showcase-img" src="https://img.itch.zone/aW1hZ2UvNTEzMjY3MS8zMDcyNDY1OS5wbmc=/original/aHjzk%2B.png" alt="NextGen Launcher Screenshot" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+      <div class="section-title">
+        <h2 data-i18n="feat_header">Engineered for PC Gamers</h2>
+        <p data-i18n="feat_sub">Everything you need to turn your desk into the ultimate couch-gaming battlestation.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-box">🎮</div>
+          <h3 data-i18n="feat_1_title">Multi-Console Themes</h3>
+          <p data-i18n="feat_1_desc">Switch seamlessly between iconic console layouts: PlayStation 5 fluid flow, Xbox tile dashboard, or the futuristic Nexus neon style.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">⚡</div>
+          <h3 data-i18n="feat_2_title">Auto-Detect Game Library</h3>
+          <p data-i18n="feat_2_desc">Instant scanner for Steam, Epic Games, EA, Ubisoft, and local folders. Automatically pulls high-resolution box covers and art.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">🤖</div>
+          <h3 data-i18n="feat_3_title">Built-in AI Assistant</h3>
+          <p data-i18n="feat_3_desc">Stuck on a mission? Need PC game recommendations or optimization tips? Chat directly with the AI gaming co-pilot built inside.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">🌐</div>
+          <h3 data-i18n="feat_4_title">Real-Time Game Translator</h3>
+          <p data-i18n="feat_4_desc">Translate in-game text and dialogues in real time. Enjoy foreign masterpieces and indie gems in your native language effortlessly.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">🏷️</div>
+          <h3 data-i18n="feat_5_title">Steam Deals & Trends</h3>
+          <p data-i18n="feat_5_desc">Never miss a discount again. Track live Steam sales, highest-rated releases, and player count trends directly in your hub.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box">🕹️</div>
+          <h3 data-i18n="feat_6_title">Full Gamepad Support</h3>
+          <p data-i18n="feat_6_desc">Plug in your PS5 DualSense, Xbox Controller, or any generic gamepad. Sit back and navigate your entire PC library from your couch.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Highlight Banner -->
+    <section class="highlight-banner">
+      <div class="highlight-content">
+        <h3 data-i18n="banner_title">Ready to Elevate Your PC Gaming?</h3>
+        <p data-i18n="banner_desc">Say goodbye to messy desktop shortcuts. Download NextGen Launcher completely free today on itch.io and game in style.</p>
+      </div>
+      <div>
+        <a href="https://m-amin-alobidan.itch.io/nextgen-launcher" target="_blank" class="btn-hero-primary" style="white-space:nowrap;">
+          <span data-i18n="banner_cta">Get Free Download (128 MB)</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-container">
+      <div class="section-title">
+        <h2 data-i18n="faq_header">Frequently Asked Questions</h2>
+        <p data-i18n="faq_sub">Got questions? We've got answers.</p>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span data-i18n="faq_q1">Is NextGen Launcher really 100% free?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer" data-i18n="faq_a1">
+          Yes! NextGen Launcher is completely free with no hidden subscriptions, locked features, or advertisements.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span data-i18n="faq_q2">Which gaming platforms and launchers are supported?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer" data-i18n="faq_a2">
+          It automatically scans games from Steam and Epic Games Store, and allows you to manually add any custom game or executable file from your computer.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span data-i18n="faq_q3">Does it work with PS5 DualSense and Xbox controllers?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer" data-i18n="faq_a3">
+          Yes! The entire interface is designed for seamless navigation using gamepads (PlayStation, Xbox, and standard USB/Bluetooth controllers) as well as keyboard and mouse.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span data-i18n="faq_q4">What are the system requirements?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer" data-i18n="faq_a4">
+          Any PC running Windows 10 or Windows 11 (64-bit), 4GB RAM minimum, and standard graphics support. It is lightweight and designed to launch games without consuming background performance.
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Final CTA -->
+  <section class="final-cta">
+    <div class="container">
+      <h2 data-i18n="cta_header">Download NextGen Launcher Today</h2>
+      <p data-i18n="cta_desc">Join gamers worldwide experiencing the next generation of PC gaming interfaces.</p>
+      <a href="https://m-amin-alobidan.itch.io/nextgen-launcher" target="_blank" class="btn-hero-primary">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span data-i18n="cta_btn">Download Free on itch.io</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div>
+      © 2026 <strong>NextGen Launcher</strong> by MNova. All rights reserved.
+    </div>
+    <div style="display:flex; gap:20px;">
+      <a href="https://m-amin-alobidan.itch.io/nextgen-launcher" target="_blank">itch.io Page</a>
+      <a href="https://m-amin-alobidan.itch.io" target="_blank">Creator Profile</a>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Tabbed Showcase switcher
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const showcaseImg = document.getElementById('showcaseImage');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        showcaseImg.style.opacity = '0.3';
+        setTimeout(() => {
+          showcaseImg.src = btn.getAttribute('data-img');
+          showcaseImg.style.opacity = '1';
+        }, 150);
+      });
+    });
+
+    // FAQ Accordion
+    document.querySelectorAll('.faq-item').forEach(item => {
+      const q = item.querySelector('.faq-question');
+      q.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+        if (!isActive) item.classList.add('active');
+      });
+    });
+
+    // Bilingual Translations (Arabic / English)
+    const translations = {
+      ar: {
+        nav_download: "تحميل مجاني",
+        pill_badge: "الإصدار 1.0.0 متاح الآن • مجاني 100% للكمبيوتر",
+        hero_title_1: "حوّل جهاز الكمبيوتر الخاص بك إلى",
+        hero_title_2: "منصة كونسول متطورة (Next-Gen)",
+        hero_desc: "عش تجربة واجهات الكونسول الفاخرة المستوحاة من PlayStation 5 و Xbox مباشرة على نظام Windows. كشف تلقائي لألعابك، مساعد ذكي، ترجمة فورية للألعاب، ومتابعة عروض Steam.",
+        hero_btn_download: "تحميل الآن مجاناً عبر itch.io",
+        hero_btn_explore: "استكشف المميزات",
+        meta_free: "مجاني بالكامل 100%",
+        meta_win: "متوافق مع Windows 10 / 11",
+        meta_no_ads: "بدون إعلانات وبأعلى حماية",
+        meta_fast: "حجم خفيف وسريع (128 MB)",
+        tab_ps5: "واجهة ستايل PS5",
+        tab_xbox: "واجهة ثيم Xbox",
+        tab_nexus: "ثيم Nexus المستقبلي",
+        tab_steam: "عروض متجر Steam",
+        tab_ai: "المساعد والترجمة الذكية",
+        feat_header: "مصمم خصيصاً لعشاق ألعاب الكمبيوتر",
+        feat_sub: "كل ما تحتاجه لتحويل شاشة مكتبك إلى تجربة كونسول منزلية فاخرة.",
+        feat_1_title: "ثيمات متعددة للكونسول",
+        feat_1_desc: "تنقل بسلاسة تامة بين تصاميم الكونسول الأيقونية: انسيابية PlayStation 5، مربعات واجهة Xbox، أو ثيم Nexus النيون المستقبلي.",
+        feat_2_title: "كشف تلقائي لمكتبة ألعابك",
+        feat_2_desc: "فحص فوري لألعاب Steam و Epic Games و EA وملفات الألعاب المثبتة على جهازك، مع جلب الأغلفة والصور الفنية بدقة فائقة.",
+        feat_3_title: "مساعد ذكاء اصطناعي مدمج",
+        feat_3_desc: "هل واجهت صعوبة في مرحلة باللعبة؟ هل تحتاج ترشيحات أو نصائح لضبط الأداء؟ تحدث مباشرة مع المساعد الذكي المدمج في التطبيق.",
+        feat_4_title: "مترجم ألعاب فوري ومباشر",
+        feat_4_desc: "ترجمة نصوص وحوارات الألعاب في الوقت الفعلي بنقرة زر، لتستمتع بأعظم الألعاب العالمية بلغتك الأم بدون أي عوائق.",
+        feat_5_title: "عروض وتخفيضات Steam",
+        feat_5_desc: "لا تفوّت أي تخفيض بعد اليوم! تتبع أقوى التخفيضات اللحظية والألعاب الأكثر لعباً وترندات الألعاب مباشرة من الواجهة.",
+        feat_6_title: "دعم كامل لأيادي التحكم (Gamepad)",
+        feat_6_desc: "وصّل يد تحكم PS5 DualSense أو يد Xbox أو أي يد تحكم عامة، واستمتع بتصفح وتشغيل كل ألعابك وأنت مسترخٍ في مكانك.",
+        banner_title: "هل أنت مستعد للارتقاء بتجربة الألعاب على حاسوبك؟",
+        banner_desc: "ودّع فوضى اختصارات سطح المكتب. حمّل NextGen Launcher مجاناً الآن من itch.io واستمتع بأروع واجهة ألعاب.",
+        banner_cta: "تحميل مجاني مباشر (128 MB)",
+        faq_header: "الأسئلة الشائعة",
+        faq_sub: "إليك إجابات على كل ما قد يدور في ذهنك.",
+        faq_q1: "هل التطبيق مجاني بالكامل حقاً؟",
+        faq_a1: "نعم! التطبيق مجاني 100% بدون أي اشتراكات أو رسوم خفية أو إعلانات مزعجة.",
+        faq_q2: "ما هي منصات الألعاب المدعومة للكشف التلقائي؟",
+        faq_a2: "يكتشف التطبيق تلقائياً ألعاب Steam و Epic Games، كما يمكنك إضافة أي لعبة أو ملف تشغيل من جهازك بضغطة زر واحدة.",
+        faq_q3: "هل يدعم التطبيق يد تحكم PS5 و Xbox؟",
+        faq_a3: "نعم! الواجهة مبرمجة بالكامل لتعمل بسلاسة مطلقة عبر أيادي التحكم (PlayStation, Xbox, Controllers) بالإضافة للماوس والكيبورد.",
+        faq_q4: "ما هي متطلبات التشغيل على الكمبيوتر؟",
+        faq_a4: "يعمل على أي كمبيوتر بنظام Windows 10 أو 11 (64-bit)، ورام 4 جيجابايت كحد أدنى. التطبيق فائق الخفة ولا يستهلك موارد جهازك أثناء اللعب.",
+        cta_header: "حمّل NextGen Launcher اليوم",
+        cta_desc: "انضم إلى مجتمع اللاعبين واستمتع بواجهة كونسول لا مثيل لها على جهاز الكمبيوتر.",
+        cta_btn: "تحميل مجاني عبر itch.io"
+      },
+      en: {
+        nav_download: "Download Free",
+        pill_badge: "Version 1.0.0 is Live • 100% Free for PC",
+        hero_title_1: "Transform Your PC Into a",
+        hero_title_2: "Next-Gen Console Station",
+        hero_desc: "Experience seamless console interfaces inspired by PlayStation 5 and Xbox directly on your Windows PC. Instant game detection, AI assistant, real-time in-game translation, and live Steam deals.",
+        hero_btn_download: "Download Now on itch.io",
+        hero_btn_explore: "Explore Features",
+        meta_free: "100% Free Forever",
+        meta_win: "Windows 10 / 11 64-bit",
+        meta_no_ads: "No Ads or Telemetry",
+        meta_fast: "Ultra Fast 128 MB",
+        tab_ps5: "PS5 Style Interface",
+        tab_xbox: "Xbox Dashboard Theme",
+        tab_nexus: "Nexus Futuristic Theme",
+        tab_steam: "Steam Store Deals",
+        tab_ai: "AI Assistant & Translator",
+        feat_header: "Engineered for PC Gamers",
+        feat_sub: "Everything you need to turn your desk into the ultimate couch-gaming battlestation.",
+        feat_1_title: "Multi-Console Themes",
+        feat_1_desc: "Switch seamlessly between iconic console layouts: PlayStation 5 fluid flow, Xbox tile dashboard, or the futuristic Nexus neon style.",
+        feat_2_title: "Auto-Detect Game Library",
+        feat_2_desc: "Instant scanner for Steam, Epic Games, EA, Ubisoft, and local folders. Automatically pulls high-resolution box covers and art.",
+        feat_3_title: "Built-in AI Assistant",
+        feat_3_desc: "Stuck on a mission? Need PC game recommendations or optimization tips? Chat directly with the AI gaming co-pilot built inside.",
+        feat_4_title: "Real-Time Game Translator",
+        feat_4_desc: "Translate in-game text and dialogues in real time. Enjoy foreign masterpieces and indie gems in your native language effortlessly.",
+        feat_5_title: "Steam Deals & Trends",
+        feat_5_desc: "Never miss a discount again. Track live Steam sales, highest-rated releases, and player count trends directly in your hub.",
+        feat_6_title: "Full Gamepad Support",
+        feat_6_desc: "Plug in your PS5 DualSense, Xbox Controller, or any generic gamepad. Sit back and navigate your entire PC library from your couch.",
+        banner_title: "Ready to Elevate Your PC Gaming?",
+        banner_desc: "Say goodbye to messy desktop shortcuts. Download NextGen Launcher completely free today on itch.io and game in style.",
+        banner_cta: "Get Free Download (128 MB)",
+        faq_header: "Frequently Asked Questions",
+        faq_sub: "Got questions? We've got answers.",
+        faq_q1: "Is NextGen Launcher really 100% free?",
+        faq_a1: "Yes! NextGen Launcher is completely free with no hidden subscriptions, locked features, or advertisements.",
+        faq_q2: "Which gaming platforms and launchers are supported?",
+        faq_a2: "It automatically scans games from Steam and Epic Games Store, and allows you to manually add any custom game or executable file from your computer.",
+        faq_q3: "Does it work with PS5 DualSense and Xbox controllers?",
+        faq_a3: "Yes! The entire interface is designed for seamless navigation using gamepads (PlayStation, Xbox, and standard USB/Bluetooth controllers) as well as keyboard and mouse.",
+        faq_q4: "What are the system requirements?",
+        faq_a4: "Any PC running Windows 10 or Windows 11 (64-bit), 4GB RAM minimum, and standard graphics support. It is lightweight and designed to launch games without consuming background performance.",
+        cta_header: "Download NextGen Launcher Today",
+        cta_desc: "Join gamers worldwide experiencing the next generation of PC gaming interfaces.",
+        cta_btn: "Download Free on itch.io"
+      }
+    };
+
+    let currentLang = 'en';
+    const langToggleBtn = document.getElementById('langToggle');
+    const langTextSpan = document.getElementById('langText');
+
+    langToggleBtn.addEventListener('click', () => {
+      currentLang = (currentLang === 'en') ? 'ar' : 'en';
+      document.body.dir = (currentLang === 'ar') ? 'rtl' : 'ltr';
+      langTextSpan.textContent = (currentLang === 'ar') ? 'English' : 'العربية';
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[currentLang][key]) {
+          el.textContent = translations[currentLang][key];
+        }
+      });
+    });
+  </script>
+</body>
+</html>
